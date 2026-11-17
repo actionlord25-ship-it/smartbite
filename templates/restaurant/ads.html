@@ -1,0 +1,27 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, empty with context %}
+{% block title %}Sponsored Ads{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Sponsored ads</h1><p>Be listed at the top of every restaurant list for the weeks you choose.</p></div></div>
+<div class="grid g2" style="align-items:start">
+  <form class="card pad" method="post" enctype="multipart/form-data">{{ csrf() }}
+    <h3 class="mb">Promote {{ my_restaurant.name }}</h3>
+    {% if price > 0 %}
+    <div class="stat leaf mb"><div class="k">Price per week</div><div class="v">{{ price|naira }}</div></div>
+    <label class="field"><span>Number of weeks (1 to 26) *</span><input type="number" name="weeks" min="1" max="26" value="1" required data-price="{{ price }}"></label>
+    {% if bank.bank_name and bank.account_number %}
+    <div class="bank-box mb"><strong>Pay to SmartBite</strong><span>Account name: <strong>{{ bank.account_name }}</strong></span><span>Bank: <strong>{{ bank.bank_name }}</strong></span><span class="acct">{{ bank.account_number }}</span><span class="small muted">Amount = weeks x {{ price|naira }}</span></div>
+    {% else %}<div class="alert alert-warn">{{ icon('info') }}<span>SmartBite has not published bank details yet. Contact support before paying.</span></div>{% endif %}
+    <label class="field"><span>Proof of payment (JPG or PNG) *</span><input type="file" name="proof" accept="image/png,image/jpeg" required></label>
+    <button class="btn btn-primary btn-block" type="submit" {{ 'disabled' if not my_restaurant.is_approved else '' }}>Submit ad request</button>
+    {% if not my_restaurant.is_approved %}<p class="small muted mt">Your restaurant must be approved first.</p>{% endif %}
+    {% else %}<p class="muted">Sponsored placement is not available yet.</p>{% endif %}
+  </form>
+  <div class="card"><div class="card-head"><h3>Your ads</h3></div>
+    <div class="table-wrap"><table class="table"><thead><tr><th>Weeks</th><th>Amount</th><th>Status</th><th>Runs</th></tr></thead><tbody>
+    {% for a in ads %}<tr><td>{{ a.weeks }}</td><td>{{ a.amount|naira }}</td>
+      <td><span class="badge {{ 'b-green' if a.is_live else ('b-orange' if a.status == 'pending' else ('b-red' if a.status == 'rejected' else '')) }}">{{ 'Live' if a.is_live else ('Scheduled/ended' if a.status == 'approved' else a.status|capitalize) }}</span></td>
+      <td class="small">{% if a.starts_at %}{{ a.starts_at|dday }} - {{ a.ends_at|dday }}{% else %}-{% endif %}</td></tr>
+    {% else %}<tr><td colspan="4">{{ empty('No ads yet', 'Submit your first request.') }}</td></tr>{% endfor %}</tbody></table></div></div>
+</div>
+{% endblock %}

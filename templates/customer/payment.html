@@ -1,0 +1,56 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, status_badge with context %}
+{% block title %}Payment for order #{{ order.id }}{% endblock %}
+{% block scripts %}{% if paystack_key and can_upload %}<script src="https://js.paystack.co/v1/inline.js"></script>{% endif %}{% endblock %}
+{% block content %}
+{% set r = order.restaurant %}
+{% set latest = order.proofs[0] if order.proofs else None %}
+<div class="page-head"><div><h1>Pay for order #{{ order.id }}</h1><p>{{ r.name }} - total <strong>{{ order.total_amount|naira }}</strong></p></div><a class="btn btn-ghost" href="{{ url_for('customer_order_detail', order_id=order.id) }}">View order</a></div>
+
+{% if order.payment_status == 'paid' %}
+  <div class="alert alert-success">{{ icon('check') }}<span><strong>Payment confirmed.</strong> {{ r.name }} verified your payment and your order is confirmed.</span></div>
+{% elif order.payment_status == 'awaiting_verification' %}
+  <div class="alert alert-warn">{{ icon('clock') }}<span><strong>Payment proof under verification.</strong> The restaurant is checking your receipt. You will get a notification as soon as it is approved.</span></div>
+{% elif order.payment_status == 'rejected' %}
+  <div class="alert alert-error">{{ icon('alert') }}<span><strong>Your last proof was rejected.</strong>{% if latest and latest.note %} Reason: {{ latest.note }}.{% endif %} Please upload a clear receipt below.</span></div>
+{% elif order.status == 'cancelled' %}
+  <div class="alert alert-error">{{ icon('alert') }}<span>This order was cancelled, so no payment is needed.</span></div>
+{% endif %}
+
+<div class="grid g2" style="align-items:start">
+  <div class="card pad">
+    <h3 class="mb">Step 1 - Pay</h3>
+    {% if r.bank_name and r.account_number %}
+    <div class="bank-box"><strong>Bank transfer to {{ r.name }}</strong>
+      <span>Account name: <strong>{{ r.account_name or r.name }}</strong></span><span>Bank: <strong>{{ r.bank_name }}</strong></span>
+      <span class="acct">{{ r.account_number }}</span>
+      <span>Amount: <strong>{{ order.total_amount|naira }}</strong></span>
+      <button type="button" class="btn btn-ghost btn-sm" data-copy="{{ r.account_number }}">Copy account number</button></div>
+    {% endif %}
+    {% if can_upload %}
+      <p class="muted small mt">Or pay instantly by card, bank or USSD:</p>
+      {% if paystack_key %}
+        <button type="button" id="paystack-btn" class="btn btn-green btn-block mt" data-key="{{ paystack_key }}" data-email="{{ current_user.email }}" data-amount="{{ order.total_amount }}" data-ref="{{ paystack_ref }}" data-ref-url="{{ url_for('customer_paystack_reference', order_id=order.id) }}">{{ icon('wallet', 18) }} Pay {{ order.total_amount|naira }} with Paystack</button>
+      {% else %}
+        <button type="button" class="btn btn-ghost btn-block mt" disabled>Paystack is not enabled yet - use bank transfer</button>
+      {% endif %}
+    {% endif %}
+    {% if order.paystack_ref %}<p class="small muted mt">Paystack reference: {{ order.paystack_ref }}</p>{% endif %}
+  </div>
+  <div class="card pad" id="proof-form">
+    <h3 class="mb">Step 2 - Upload proof of payment</h3>
+    {% if can_upload %}
+      <form method="post" action="{{ url_for('customer_upload_proof', order_id=order.id) }}" enctype="multipart/form-data">
+        {{ csrf() }}
+        <img id="proof-preview" class="proof-img" style="border-radius:12px;margin-bottom:.8rem;height:200px" src="{{ url_for('static', filename='images/default-food.svg') }}" alt="Preview of your receipt">
+        <label class="field"><span>Receipt or screenshot (JPG or PNG, up to 5 MB) *</span><input type="file" name="proof" accept="image/png,image/jpeg" required data-preview="proof-preview"></label>
+        <button class="btn btn-primary btn-block" type="submit">{{ icon('upload', 18) }} Submit proof</button>
+      </form>
+      <p class="small muted mt">Your order stays on hold until the restaurant approves the proof.</p>
+    {% elif latest %}
+      <a href="{{ url_for('static', filename=latest.image_path) }}" target="_blank" rel="noopener"><img class="proof-img" style="border-radius:12px" src="{{ url_for('static', filename=latest.image_path) }}" alt="Your uploaded receipt"></a>
+      <p class="small muted mt">Uploaded {{ latest.uploaded_at|dt }} - status: <strong>{{ latest.status|capitalize }}</strong></p>
+    {% else %}<p class="muted">Payment proof is not needed for this order right now.</p>{% endif %}
+  </div>
+</div>
+{% endblock %}

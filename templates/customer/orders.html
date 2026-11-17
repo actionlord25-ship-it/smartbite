@@ -1,0 +1,19 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import status_badge, pay_badge, pager, empty with context %}
+{% block title %}My Orders{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My orders</h1><p>Your order history.</p></div></div>
+<div class="tabs"><a class="tab {{ '' if status else 'active' }}" href="{{ url_for('customer_orders') }}">All</a>
+  {% for s in ['placed','confirmed','preparing','out_for_delivery','delivered','cancelled'] %}<a class="tab {{ 'active' if status == s else '' }}" href="{{ url_for('customer_orders', status=s) }}">{{ s|status_label }}</a>{% endfor %}</div>
+<div class="card">
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Order</th><th>Restaurant</th><th>Date</th><th>Total</th><th>Payment</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for o in pagination.items %}
+      <tr><td><strong>#{{ o.id }}</strong></td><td>{{ o.restaurant.name }}</td><td>{{ o.created_at|dt }}</td><td>{{ o.total_amount|naira }}</td><td>{{ pay_badge(o) }}</td><td>{{ status_badge(o.status) }}</td>
+        <td class="right"><a class="btn btn-ghost btn-sm" href="{{ url_for('customer_order_detail', order_id=o.id) }}">View</a></td></tr>
+    {% else %}<tr><td colspan="7">{{ empty('No orders yet', 'Your orders will be listed here.', url_for('customer_restaurants'), 'Order something') }}</td></tr>{% endfor %}
+    </tbody></table></div>
+</div>
+{{ pager(pagination) }}
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import search_results, empty with context %}
+{% block title %}{{ 'Results for ' ~ q if q else 'Explore' }} - SmartBite{% endblock %}
+{% block content %}
+<section class="section" style="min-height:60vh">
+  <div class="container">
+    <form class="hero-search mb" action="{{ url_for('explore') }}" method="get" role="search" style="max-width:640px">
+      <input type="search" name="q" value="{{ q }}" placeholder="Search food or restaurant, e.g. spicy chicken under 3000" maxlength="120" aria-label="Search" required>
+      <button class="btn btn-primary" type="submit">{{ icon('search', 18) }} Search</button>
+    </form>
+    {% if results %}
+      {{ search_results(results, [], 'view', []) }}
+      <p class="small muted mt">Log in as a customer to add dishes to your cart. <a class="orange strong" href="{{ url_for('login') }}">Login</a> or <a class="orange strong" href="{{ url_for('signup') }}">create an account</a>.</p>
+    {% else %}
+      <div class="card">{{ empty('Search SmartBite', 'Type a dish, a restaurant or a budget such as "rice under 2500".') }}</div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

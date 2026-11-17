@@ -1,0 +1,31 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, status_badge, pay_badge, pager, empty with context %}
+{% block title %}Incoming Orders{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Incoming orders</h1><p>Accept, reject and move orders through the kitchen.</p></div></div>
+<div class="tabs">{% for key, label in [('active','Active'),('new','New'),('done','Completed'),('all','All')] %}<a class="tab {{ 'active' if view == key else '' }}" href="{{ url_for('owner_orders', view=key) }}">{{ label }}</a>{% endfor %}</div>
+{% for o in pagination.items %}
+<div class="card order-card">
+  <div class="row between"><div><strong>Order #{{ o.id }}</strong> <span class="muted small">{{ o.created_at|dt }}</span></div><div class="row">{{ pay_badge(o) }}{{ status_badge(o.status) }}{% if o.is_packed %}<span class="badge b-green">Packed</span>{% endif %}</div></div>
+  <div class="grid g2 mt">
+    <div><ul class="item-list">{% for i in o.items %}<li><span>{{ i.quantity }} x {{ i.food_name }}</span><span>{{ (i.price * i.quantity)|naira }}</span></li>{% endfor %}</ul>
+      <div class="strong">Food total: {{ o.subtotal|naira }}</div>{% if o.note %}<div class="small muted mt">Note: {{ o.note }}</div>{% endif %}</div>
+    <dl class="kv"><dt>Customer</dt><dd>{{ o.customer.name }}</dd><dt>Phone</dt><dd>{{ o.customer_phone }}</dd><dt>Deliver to</dt><dd>{{ o.delivery_address }}</dd>
+      <dt>Rider</dt><dd>{{ o.rider.name if o.rider else 'Not assigned' }}</dd></dl>
+  </div>
+  <div class="row mt">
+    {% if o.status == 'placed' %}
+      {% if o.payment_method == 'online' and o.payment_status != 'paid' %}
+        <span class="small muted">{{ 'Review the payment proof before accepting.' if o.payment_status == 'awaiting_verification' else 'Waiting for the customer to pay.' }}</span><a class="btn btn-outline btn-sm" href="{{ url_for('owner_verifications') }}">Payment verifications</a>
+      {% else %}<form method="post" action="{{ url_for('owner_order_action', order_id=o.id) }}">{{ csrf() }}<button class="btn btn-green btn-sm" name="action" value="accept" type="submit">{{ icon('check', 16) }} Accept</button></form>{% endif %}
+      <form method="post" action="{{ url_for('owner_order_action', order_id=o.id) }}">{{ csrf() }}<button class="btn btn-danger btn-sm" name="action" value="reject" type="submit" data-confirm="Reject order #{{ o.id }}? The customer will be notified.">{{ icon('close', 16) }} Reject</button></form>
+    {% elif o.status == 'confirmed' %}
+      <form method="post" action="{{ url_for('owner_order_action', order_id=o.id) }}">{{ csrf() }}<button class="btn btn-primary btn-sm" name="action" value="preparing" type="submit">Start preparing</button></form>
+      {% if not o.rider_id %}<form method="post" action="{{ url_for('owner_order_action', order_id=o.id) }}">{{ csrf() }}<button class="btn btn-danger btn-sm" name="action" value="reject" type="submit" data-confirm="Cancel this confirmed order?">Cancel order</button></form>{% endif %}
+    {% elif o.status == 'preparing' %}<span class="small muted">{{ 'Packed and waiting for the rider.' if o.is_packed else 'In the kitchen. The rider will mark it picked up.' }}</span>
+    {% elif o.status == 'out_for_delivery' %}<span class="small muted">With the rider.</span>{% endif %}
+  </div>
+</div>
+{% else %}<div class="card">{{ empty('No orders here', 'New orders will show up automatically.') }}</div>{% endfor %}
+{{ pager(pagination) }}
+{% endblock %}

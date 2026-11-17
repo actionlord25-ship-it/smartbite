@@ -1,0 +1,18 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, status_badge, empty with context %}
+{% block title %}Kitchen Queue{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Kitchen queue</h1><p>{{ member.restaurant.name }} - you work as a <strong>{{ member.staff_role }}</strong>.</p></div></div>
+{% for o in queue %}
+<div class="card order-card">
+  <div class="row between"><strong>Order #{{ o.id }}</strong><span class="row">{{ status_badge(o.status) }}{% if o.is_packed %}<span class="badge b-green">Packed</span>{% endif %}</span></div>
+  <ul class="item-list mt">{% for i in o.items %}<li><span><strong>{{ i.quantity }} x</strong> {{ i.food_name }}</span></li>{% endfor %}</ul>
+  {% if o.note %}<div class="small muted">Note: {{ o.note }}</div>{% endif %}
+  <div class="row mt">
+    {% if member.staff_role == 'cook' and o.status == 'confirmed' %}<form method="post" action="{{ url_for('staff_order_action', order_id=o.id) }}">{{ csrf() }}<button class="btn btn-primary btn-sm" name="action" value="preparing" type="submit">Start preparing</button></form>
+    {% elif member.staff_role == 'packager' and o.status == 'preparing' and not o.is_packed %}<form method="post" action="{{ url_for('staff_order_action', order_id=o.id) }}">{{ csrf() }}<button class="btn btn-green btn-sm" name="action" value="packed" type="submit">Mark packed</button></form>
+    {% else %}<span class="small muted">Nothing for you to do on this order right now.</span>{% endif %}
+  </div>
+</div>
+{% else %}<div class="card">{{ empty('The queue is clear', 'Confirmed orders show up here automatically. Refresh to check.', url_for('staff_dashboard'), 'Refresh') }}</div>{% endfor %}
+{% endblock %}

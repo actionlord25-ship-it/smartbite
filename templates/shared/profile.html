@@ -1,0 +1,22 @@
+{% extends 'layouts/dash.html' %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My profile</h1><p>Your account details.</p></div><a class="btn btn-primary" href="{{ url_for('settings', tab='profile') }}">{{ icon('edit', 16) }} Edit profile</a></div>
+<div class="grid g2">
+  <div class="card pad">
+    <div class="row"><img class="preview" src="{{ img_url(current_user.profile_image, 'avatar') }}" alt="" style="width:96px;height:96px">
+      <div><h2>{{ current_user.name }}</h2><span class="badge b-green">{{ current_user.role.replace('_', ' ')|title }}</span></div></div>
+    <dl class="kv mt-2">
+      <dt>Email</dt><dd>{{ current_user.email }}</dd>
+      <dt>Phone</dt><dd>{{ current_user.phone or '-' }}</dd>
+      <dt>Address</dt><dd>{{ current_user.address or '-' }}</dd>
+      <dt>Member since</dt><dd>{{ current_user.created_at|dday }}</dd>
+    </dl>
+  </div>
+  {% if stats %}
+  <div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));align-content:start">
+    {% for label, value in stats %}<div class="stat"><div class="k">{{ label }}</div><div class="v">{{ value }}</div></div>{% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

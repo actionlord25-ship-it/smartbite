@@ -1,0 +1,10 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import food_card, rest_card, empty with context %}
+{% block title %}Favorites{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Favorites</h1><p>Restaurants and dishes you saved.</p></div></div>
+<div class="section-title" style="margin-top:0"><h2>Restaurants</h2></div>
+{% if restaurants %}<div class="auto-grid">{% for r in restaurants %}{{ rest_card(r, ad_ids, fav_restaurants) }}{% endfor %}</div>{% else %}<div class="card">{{ empty('No favorite restaurants', 'Tap the heart on a restaurant to save it.', url_for('customer_restaurants'), 'Browse restaurants') }}</div>{% endif %}
+<div class="section-title"><h2>Dishes</h2></div>
+{% if foods %}<div class="auto-grid">{% for f in foods %}{{ food_card(f, fav_foods) }}{% endfor %}</div>{% else %}<div class="card">{{ empty('No favorite dishes', 'Tap the heart on a dish to find it quickly later.') }}</div>{% endif %}
+{% endblock %}

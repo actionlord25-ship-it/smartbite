@@ -1,0 +1,37 @@
+{% extends 'layouts/dash.html' %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Settings</h1><p>Theme, profile, account and security.</p></div></div>
+<div class="tabs" role="tablist">
+  {% for key, label in [('appearance','Appearance'),('profile','Update Profile'),('account','Account Details'),('password','Change Password')] %}
+    <a class="tab {{ 'active' if tab == key else '' }}" href="{{ url_for('settings', tab=key) }}">{{ label }}</a>
+  {% endfor %}
+</div>
+<div style="max-width:720px">
+{% if tab == 'appearance' %}
+  {% include 'partials/theme_card.html' %}
+{% elif tab == 'profile' %}
+  <form class="card pad" method="post" action="{{ url_for('update_profile') }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row mb"><img id="set-preview" class="preview" src="{{ img_url(current_user.profile_image, 'avatar') }}" alt="">
+      <label class="field grow" style="margin:0"><span>Profile image</span><input type="file" name="profile_image" accept="image/png,image/jpeg" data-preview="set-preview"></label></div>
+    <div class="form-grid">
+      <label class="field"><span>Full name</span><input name="name" value="{{ current_user.name }}" required maxlength="100"></label>
+      <label class="field"><span>Phone</span><input type="tel" name="phone" value="{{ current_user.phone or '' }}" required maxlength="20"></label>
+      <label class="field full"><span>Address</span><textarea name="address" maxlength="500">{{ current_user.address or '' }}</textarea></label>
+    </div>
+    <button class="btn btn-primary" type="submit">Save profile</button>
+  </form>
+{% elif tab == 'account' %}
+  <form class="card pad" method="post" action="{{ url_for('update_account') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h3>Account details</h3><p class="muted small mb">Changing your login email needs your current password.</p>
+    <label class="field"><span>Email</span><input type="email" name="email" value="{{ current_user.email }}" required maxlength="100" autocomplete="email"></label>
+    <label class="field"><span>Current password</span><input type="password" name="current_password" required autocomplete="current-password"></label>
+    <button class="btn btn-primary" type="submit">Update account</button>
+  </form>
+{% else %}
+  {% include 'partials/password_card.html' %}
+{% endif %}
+</div>
+{% endblock %}

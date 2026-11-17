@@ -1,0 +1,29 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, empty with context %}
+{% block title %}My Cart{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My cart</h1>{% if restaurant %}<p>From {{ restaurant.name }}</p>{% endif %}</div>
+  {% if items %}<form method="post" action="{{ url_for('cart_clear') }}">{{ csrf() }}<button class="btn btn-ghost btn-sm" type="submit" data-confirm="Remove everything from your cart?">{{ icon('trash', 16) }} Clear cart</button></form>{% endif %}</div>
+{% if items %}
+<div class="grid" style="grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);align-items:start">
+  <div class="card">
+    {% for i in items %}
+      <div class="line"><img src="{{ img_url(i.food.image, 'food') }}" alt="">
+        <div class="grow"><strong>{{ i.food.name }}</strong><div class="small muted">{{ i.food.price|naira }} each</div></div>
+        <form method="post" action="{{ url_for('cart_update') }}" class="qty">{{ csrf() }}<input type="hidden" name="id" value="{{ i.id }}">
+          <button type="submit" name="action" value="dec" aria-label="Decrease quantity">&minus;</button><input value="{{ i.quantity }}" readonly aria-label="Quantity"><button type="submit" name="action" value="inc" aria-label="Increase quantity">+</button></form>
+        <strong style="min-width:84px;text-align:right">{{ (i.food.price * i.quantity)|naira }}</strong>
+        <form method="post" action="{{ url_for('cart_update') }}">{{ csrf() }}<input type="hidden" name="id" value="{{ i.id }}"><button class="icon-btn" type="submit" name="action" value="remove" aria-label="Remove {{ i.food.name }}">{{ icon('trash', 18) }}</button></form>
+      </div>
+    {% endfor %}
+  </div>
+  <div class="card pad">
+    <h3 class="mb">Order summary</h3>
+    <div class="totals"><div><span>Food total</span><span>{{ totals.subtotal|naira }}</span></div><div><span>Service charge</span><span>{{ totals.service_charge|naira }}</span></div>
+      <div><span>Platform fee ({{ '%g'|format(totals.pct) }}%)</span><span>{{ totals.commission|naira }}</span></div><div class="grand"><span>Total</span><span>{{ totals.total|naira }}</span></div></div>
+    <a class="btn btn-primary btn-block btn-lg mt" href="{{ url_for('customer_checkout') }}">Proceed to checkout</a>
+    <a class="btn btn-ghost btn-block mt" href="{{ url_for('customer_menu', restaurant_id=restaurant.id) }}">Add more dishes</a>
+  </div>
+</div>
+{% else %}<div class="card">{{ empty('Your cart is empty', 'Pick a restaurant and add something delicious.', url_for('customer_restaurants'), 'Browse restaurants') }}</div>{% endif %}
+{% endblock %}

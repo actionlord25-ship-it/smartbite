@@ -1,0 +1,27 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import pager, empty with context %}
+{% block title %}Transactions{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Transactions</h1><p>Money flowing through SmartBite (delivered orders and approved ads).</p></div></div>
+<div class="stats">
+  <div class="stat"><div class="k">Order value delivered</div><div class="v">{{ summary.gmv|naira }}</div></div>
+  <div class="stat leaf"><div class="k">Commission</div><div class="v">{{ summary.commission|naira }}</div></div>
+  <div class="stat leaf"><div class="k">Service charges</div><div class="v">{{ summary.service|naira }}</div></div>
+  <div class="stat leaf"><div class="k">Sponsored ads</div><div class="v">{{ summary.ads|naira }}</div></div>
+  <div class="stat"><div class="k">Rider payouts</div><div class="v">{{ summary.rider_payouts|naira }}</div></div>
+  <div class="stat accent"><div class="k">Platform net</div><div class="v">{{ summary.platform|naira }}</div></div>
+</div>
+<div class="tabs"><a class="tab {{ 'active' if kind == 'orders' else '' }}" href="{{ url_for('admin_transactions', type='orders') }}">Order payments</a><a class="tab {{ 'active' if kind == 'ads' else '' }}" href="{{ url_for('admin_transactions', type='ads') }}">Sponsored ads</a></div>
+<div class="card"><div class="table-wrap"><table class="table">
+{% if kind == 'ads' %}
+<thead><tr><th>Date</th><th>Restaurant</th><th>Weeks</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+{% for a in pagination.items %}<tr><td>{{ a.created_at|dt }}</td><td>{{ a.restaurant.name }}</td><td>{{ a.weeks }}</td><td>{{ a.amount|naira }}</td><td><span class="badge {{ 'b-green' if a.status == 'approved' else ('b-red' if a.status == 'rejected' else 'b-orange') }}">{{ a.status|capitalize }}</span></td></tr>
+{% else %}<tr><td colspan="5">{{ empty('No ad payments yet') }}</td></tr>{% endfor %}
+{% else %}
+<thead><tr><th>Date</th><th>Order</th><th>Customer</th><th>Method</th><th>Amount</th><th>Platform fees</th><th>Status</th></tr></thead><tbody>
+{% for p in pagination.items %}<tr><td>{{ p.created_at|dt }}</td><td>#{{ p.order_id }}</td><td>{{ p.order.customer.name }}</td><td>{{ p.method }}</td><td>{{ p.amount|naira }}</td><td>{{ (p.order.commission + p.order.service_charge)|naira }}</td><td><span class="badge {{ 'b-green' if p.status == 'paid' else ('b-red' if p.status in ('failed', 'cancelled') else 'b-orange') }}">{{ p.status|capitalize }}</span></td></tr>
+{% else %}<tr><td colspan="7">{{ empty('No transactions yet') }}</td></tr>{% endfor %}
+{% endif %}
+</tbody></table></div></div>
+{{ pager(pagination) }}
+{% endblock %}

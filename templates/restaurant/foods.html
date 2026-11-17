@@ -1,0 +1,16 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, empty with context %}
+{% block title %}My Foods{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My foods</h1><p>Add, edit and switch dishes on or off.</p></div><a class="btn btn-primary" href="{{ url_for('owner_food_new') }}">{{ icon('plus', 16) }} Add dish</a></div>
+{% if q %}<p class="muted mb">Showing results for "{{ q }}". <a class="orange strong" href="{{ url_for('owner_foods') }}">Clear</a></p>{% endif %}
+<div class="card"><div class="table-wrap"><table class="table">
+  <thead><tr><th></th><th>Dish</th><th>Category</th><th>Price</th><th>Availability</th><th></th></tr></thead><tbody>
+  {% for f in foods %}
+    <tr><td><img class="thumb" src="{{ img_url(f.image, 'food') }}" alt=""></td><td><strong>{{ f.name }}</strong><div class="tiny muted">{{ (f.description or '')|truncate(60) }}</div></td><td>{{ f.category or '-' }}</td><td>{{ f.price|naira }}</td>
+      <td><form method="post" action="{{ url_for('owner_food_toggle', food_id=f.id) }}">{{ csrf() }}<button class="badge {{ 'b-green' if f.is_available else 'b-red' }}" type="submit" title="Click to change">{{ 'Available' if f.is_available else 'Unavailable' }}</button></form></td>
+      <td class="right"><div class="row" style="justify-content:flex-end"><a class="btn btn-ghost btn-sm" href="{{ url_for('owner_food_edit', food_id=f.id) }}">{{ icon('edit', 14) }} Edit</a>
+        <form method="post" action="{{ url_for('owner_food_delete', food_id=f.id) }}">{{ csrf() }}<button class="btn btn-danger btn-sm" type="submit" data-confirm="Delete {{ f.name }} permanently?">{{ icon('trash', 14) }} Delete</button></form></div></td></tr>
+  {% else %}<tr><td colspan="6">{{ empty('No dishes yet', 'Add your first dish to start taking orders.', url_for('owner_food_new'), 'Add a dish') }}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import csrf with context %}
+{% block title %}Sign up - SmartBite{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <aside class="auth-side"><img src="{{ url_for('static', filename='images/hero-plate.svg') }}" alt="" width="420" height="420"></aside>
+  <div class="auth-main">
+    <div class="auth-card">
+      <h1>Create your account</h1>
+      <p class="sub">Already registered? <a class="orange strong" href="{{ url_for('login') }}">Log in</a> and we will redirect you to your dashboard.</p>
+      <form method="post" action="{{ url_for('signup') }}" enctype="multipart/form-data">
+        {{ csrf() }}
+        <div class="form-grid">
+          <label class="field full"><span>I want to *</span>
+            <select name="role" data-role-toggle required>
+              <option value="customer" {{ 'selected' if form.role == 'customer' else '' }}>Order food (customer)</option>
+              <option value="restaurant_owner" {{ 'selected' if form.role == 'restaurant_owner' else '' }}>Sell food (restaurant owner)</option>
+              <option value="rider" {{ 'selected' if form.role == 'rider' else '' }}>Deliver orders (rider)</option>
+            </select></label>
+          <label class="field full hide" data-role-show="restaurant_owner"><span>Restaurant name *</span><input name="restaurant_name" value="{{ form.restaurant_name or '' }}" maxlength="100"></label>
+          <label class="field"><span>Full name *</span><input name="name" value="{{ form.name or '' }}" required maxlength="100" autocomplete="name"></label>
+          <label class="field"><span>Phone *</span><input type="tel" name="phone" value="{{ form.phone or '' }}" required maxlength="20" autocomplete="tel"></label>
+          <label class="field full"><span>Email *</span><input type="email" name="email" value="{{ form.email or '' }}" required maxlength="100" autocomplete="email"></label>
+          <label class="field full"><span>Address *</span><textarea name="address" required maxlength="500" autocomplete="street-address">{{ form.address or '' }}</textarea></label>
+          <label class="field"><span>Password *</span>
+            <div class="pw-wrap"><input class="input" type="password" name="password" required minlength="8" autocomplete="new-password"><button type="button" data-toggle-password>Show</button></div>
+            <small>At least 8 characters with a letter and a number.</small></label>
+          <label class="field"><span>Confirm password *</span><input type="password" name="confirm" required minlength="8" autocomplete="new-password"></label>
+          <div class="field full"><span>Profile image (optional)</span>
+            <div class="row"><img id="signup-preview" class="preview" src="{{ url_for('static', filename='images/default-avatar.svg') }}" alt="">
+              <input type="file" name="profile_image" accept="image/png,image/jpeg" data-preview="signup-preview" style="flex:1"></div>
+            <small>JPG or PNG, up to 5 MB.</small></div>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" type="submit">Create account</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf with context %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Checkout</h1><p>Ordering from {{ restaurant.name }}</p></div></div>
+<form method="post" class="grid" style="grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);align-items:start">
+  {{ csrf() }}
+  <div class="grid">
+    <div class="card pad">
+      <h3 class="mb">Delivery details</h3>
+      <label class="field"><span>Delivery address *</span><textarea name="delivery_address" required minlength="8" maxlength="500" placeholder="House number, street, area, landmark">{{ request.form.get('delivery_address', current_user.address or '') }}</textarea></label>
+      <label class="field"><span>Phone number *</span><input type="tel" name="phone" required maxlength="20" value="{{ request.form.get('phone', current_user.phone or '') }}"></label>
+      <label class="field"><span>Note for the restaurant or rider (optional)</span><input name="note" maxlength="250" value="{{ request.form.get('note', '') }}"></label>
+      <input type="hidden" name="lat" value=""><input type="hidden" name="lng" value="">
+      <div class="row"><button type="button" class="btn btn-ghost btn-sm" data-geo>{{ icon('pin', 16) }} Use my current location</button><span class="small muted" data-geo-status>Helps your rider find you faster.</span></div>
+    </div>
+    <div class="card pad">
+      <h3 class="mb">Payment method</h3>
+      <div class="pay-options">
+        <label class="pay-opt"><input type="radio" name="payment_method" value="cod" {{ 'checked' if request.form.get('payment_method', 'cod') == 'cod' else '' }}><div><strong>Cash on delivery</strong><div class="small muted">Pay the rider when your food arrives.</div></div></label>
+        <label class="pay-opt"><input type="radio" name="payment_method" value="online" {{ 'checked' if request.form.get('payment_method') == 'online' else '' }}><div><strong>Online payment</strong><div class="small muted">Pay by bank transfer or Paystack, then upload your proof of payment.</div></div></label>
+      </div>
+      <div id="bank-panel" class="bank-box mt {{ '' if request.form.get('payment_method') == 'online' else 'hide' }}">
+        <strong>{{ restaurant.name }} bank details</strong>
+        {% if restaurant.bank_name and restaurant.account_number %}
+          <span>Account name: <strong>{{ restaurant.account_name or restaurant.name }}</strong></span><span>Bank: <strong>{{ restaurant.bank_name }}</strong></span><span class="acct">{{ restaurant.account_number }}</span>
+          <span class="small muted">After placing your order you can pay with Paystack or transfer, then upload your receipt.</span>
+        {% else %}<span>This restaurant has not added bank details. Please choose cash on delivery.</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="card pad">
+    <h3 class="mb">Your order</h3><div class="alert alert-info small">{{ icon('clock', 16) }}<span>Estimated delivery: <strong>about 35–55 minutes</strong> after the restaurant confirms your order. Actual time may vary with distance, traffic and preparation.</span></div>
+    <ul class="item-list">{% for i in items %}<li><span>{{ i.quantity }} x {{ i.food.name }}</span><span>{{ (i.food.price * i.quantity)|naira }}</span></li>{% endfor %}</ul>
+    <div class="totals mt"><div><span>Food total</span><span>{{ totals.subtotal|naira }}</span></div><div><span>Service charge</span><span>{{ totals.service_charge|naira }}</span></div>
+      <div><span>Platform fee ({{ '%g'|format(totals.pct) }}%)</span><span>{{ totals.commission|naira }}</span></div><div class="grand"><span>Total</span><span>{{ totals.total|naira }}</span></div></div>
+    <button class="btn btn-primary btn-block btn-lg mt" type="submit">Place order</button>
+    <a class="btn btn-ghost btn-block mt" href="{{ url_for('customer_cart') }}">Back to cart</a>
+  </div>
+</form>
+{% endblock %}

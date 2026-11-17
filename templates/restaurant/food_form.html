@@ -1,0 +1,22 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf with context %}
+{% block title %}{{ 'Add dish' if is_new else 'Edit dish' }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ 'Add a dish' if is_new else 'Edit dish' }}</h1><p>Photos sell food: use a bright, close-up picture.</p></div><a class="btn btn-ghost" href="{{ url_for('owner_foods') }}">Back to foods</a></div>
+<form class="card pad" style="max-width:760px" method="post" enctype="multipart/form-data">
+  {{ csrf() }}
+  <div class="row mb"><img id="food-preview" class="preview sq" src="{{ img_url(food.image, 'food') }}" alt="">
+    <label class="field grow" style="margin:0"><span>Dish image (JPG or PNG)</span><input type="file" name="image" accept="image/png,image/jpeg" data-preview="food-preview"></label></div>
+  <div class="form-grid">
+    <label class="field"><span>Dish name *</span><input name="name" value="{{ request.form.get('name', food.name or '') }}" required maxlength="100"></label>
+    <label class="field"><span>Price (&#8358;) *</span><input type="number" name="price" min="1" step="1" value="{{ request.form.get('price', food.price or '') }}" required></label>
+    <label class="field"><span>Category</span><select name="category"><option value="">Choose a category</option>
+      {% set current = request.form.get('category', food.category or '') %}
+      {% for c in categories %}<option value="{{ c.name }}" {{ 'selected' if c.name == current else '' }}>{{ c.name }}</option>{% endfor %}
+      {% if current and current not in categories|map(attribute='name') %}<option value="{{ current }}" selected>{{ current }}</option>{% endif %}</select></label>
+    <label class="field" style="justify-content:end"><span>&nbsp;</span><span class="check"><input type="checkbox" name="is_available" value="1" {{ 'checked' if (request.method == 'GET' and food.is_available) or request.form.get('is_available') else '' }}> Available to order</span></label>
+    <label class="field full"><span>Description</span><textarea name="description" maxlength="600" placeholder="Ingredients, portion size, spice level">{{ request.form.get('description', food.description or '') }}</textarea></label>
+  </div>
+  <button class="btn btn-primary" type="submit">{{ 'Add to menu' if is_new else 'Save changes' }}</button>
+</form>
+{% endblock %}

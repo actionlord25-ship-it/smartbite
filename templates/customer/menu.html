@@ -1,0 +1,32 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import food_card, rating, empty with context %}
+{% block title %}{{ restaurant.name }}{% endblock %}
+{% block content %}
+<div class="card" style="overflow:hidden;margin-bottom:1.4rem">
+  <div class="media" style="aspect-ratio:21/6"><img src="{{ img_url(restaurant.image, 'restaurant') }}" alt="">
+    {% if sponsored %}<span class="badge b-sponsor corner">Sponsored</span>{% endif %}
+    <button type="button" class="fav-btn {{ 'active' if restaurant.id in fav_restaurants else '' }}" data-fav="restaurant" data-id="{{ restaurant.id }}" data-url="{{ url_for('favorite_toggle') }}" aria-label="Favorite restaurant">{{ icon('heart', 18) }}</button></div>
+  <div class="pad"><div class="row between"><h1 style="font-size:1.8rem">{{ restaurant.name }}</h1>{% if not restaurant.is_open %}<span class="badge b-red">Closed right now</span>{% else %}<span class="badge b-green">Open</span>{% endif %}</div>
+    <div class="meta mt">{{ rating(restaurant.rating) }}<span>{{ restaurant.rating_count or 0 }} reviews</span><span>{{ icon('clock', 14) }} {{ restaurant.delivery_time or 35 }} min</span><span>{{ icon('pin', 14) }} {{ restaurant.address|truncate(70) }}</span></div>
+    {% if restaurant.description %}<p class="muted mt">{{ restaurant.description }}</p>{% endif %}</div>
+</div>
+<form class="card pad mb" method="get">
+  <div class="row">
+    <label class="field grow" style="margin:0;min-width:180px"><span class="sr-only">Search dishes</span><input type="search" name="q" value="{{ q }}" placeholder="Search this menu" maxlength="80"></label>
+    <label class="field" style="margin:0"><span class="sr-only">Min price</span><input type="number" name="min" value="{{ min_price }}" min="0" placeholder="Min &#8358;" style="width:110px"></label>
+    <label class="field" style="margin:0"><span class="sr-only">Max price</span><input type="number" name="max" value="{{ max_price }}" min="0" placeholder="Max &#8358;" style="width:110px"></label>
+    <input type="hidden" name="category" value="{{ category }}">
+    <button class="btn btn-primary" type="submit">Filter</button>
+  </div>
+  {% if categories %}<div class="chips mt"><a class="chip {{ '' if category else 'active' }}" href="{{ url_for('customer_menu', restaurant_id=restaurant.id, q=q or None, min=min_price or None, max=max_price or None) }}">All</a>
+    {% for c in categories %}<a class="chip {{ 'active' if c == category else '' }}" href="{{ url_for('customer_menu', restaurant_id=restaurant.id, category=c, q=q or None, min=min_price or None, max=max_price or None) }}">{{ c }}</a>{% endfor %}</div>{% endif %}
+</form>
+{% if foods %}<div class="auto-grid">{% for f in foods %}{{ food_card(f, fav_foods, False) }}{% endfor %}</div>
+{% else %}<div class="card">{{ empty('No dishes match', 'Clear the filters or try another search.', url_for('customer_menu', restaurant_id=restaurant.id), 'Clear filters') }}</div>{% endif %}
+
+<div class="section-title"><h2>Reviews</h2></div>
+<div class="card">
+  {% for rv in reviews %}<div class="line"><img src="{{ img_url(rv.customer.profile_image, 'avatar') }}" alt="" style="border-radius:50%;width:44px;height:44px"><div class="grow"><strong>{{ rv.customer.name.split(' ')[0] }}</strong> {{ rating(rv.rating) }}<div class="small muted">{{ rv.comment or 'No written comment.' }}</div></div><span class="tiny muted">{{ rv.created_at|dday }}</span></div>
+  {% else %}{{ empty('No reviews yet', 'Order from this restaurant and be the first to review it.') }}{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, empty with context %}
+{% block title %}Staff{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Staff</h1><p>Cooks and packagers see the kitchen queue and their own salary only. They never see earnings or analytics.</p></div></div>
+<div class="grid" style="grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);align-items:start">
+  <div class="card"><div class="card-head"><h3>Your team</h3></div>
+    {% for m in members %}
+    <form class="line" method="post" action="{{ url_for('owner_staff_update', member_id=m.id) }}">{{ csrf() }}
+      <img src="{{ img_url(m.user.profile_image, 'avatar') }}" alt="" style="border-radius:50%;width:46px;height:46px">
+      <div class="grow"><strong>{{ m.user.name }}</strong><div class="tiny muted">{{ m.user.email }} - {{ m.user.phone }}</div></div>
+      <select class="input" name="staff_role" style="width:auto" aria-label="Role"><option value="cook" {{ 'selected' if m.staff_role == 'cook' else '' }}>Cook</option><option value="packager" {{ 'selected' if m.staff_role == 'packager' else '' }}>Packager</option></select>
+      <input class="input" type="number" name="salary" min="0" value="{{ m.monthly_salary }}" style="width:120px" aria-label="Monthly salary">
+      <button class="btn btn-ghost btn-sm" type="submit">Save</button>
+      <button class="btn btn-danger btn-sm" type="submit" formaction="{{ url_for('owner_staff_delete', member_id=m.id) }}" data-confirm="Remove {{ m.user.name }}? Their login will be deleted.">{{ icon('trash', 14) }}</button>
+    </form>
+    {% else %}{{ empty('No staff yet', 'Add a cook or packager using the form.') }}{% endfor %}
+  </div>
+  <form class="card pad" method="post">{{ csrf() }}
+    <h3 class="mb">Add staff</h3>
+    <label class="field"><span>Full name *</span><input name="name" required maxlength="100" value="{{ request.form.get('name', '') }}"></label>
+    <label class="field"><span>Email (their login) *</span><input type="email" name="email" required maxlength="100" value="{{ request.form.get('email', '') }}"></label>
+    <label class="field"><span>Phone *</span><input type="tel" name="phone" required maxlength="20" value="{{ request.form.get('phone', '') }}"></label>
+    <label class="field"><span>Role *</span><select name="staff_role" required><option value="cook">Cook</option><option value="packager">Packager</option></select></label>
+    <label class="field"><span>Monthly salary (&#8358;) *</span><input type="number" name="salary" min="0" required></label>
+    <label class="field"><span>Temporary password *</span><input type="password" name="password" required minlength="8" autocomplete="new-password"><small>They must change it at first login.</small></label>
+    <button class="btn btn-primary btn-block" type="submit">Add staff member</button>
+  </form>
+</div>
+{% endblock %}

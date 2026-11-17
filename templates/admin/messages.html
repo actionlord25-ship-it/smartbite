@@ -1,0 +1,13 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, empty with context %}
+{% block title %}Messages{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Contact messages</h1><p>Sent from the Contact Us form on the public site.</p></div></div>
+<div class="card">
+  {% for m in items %}
+  <div class="line" style="align-items:flex-start"><span class="icon-btn" style="flex:none">{{ icon('mail', 18) }}</span>
+    <div class="grow"><strong>{{ m.name }}</strong> {% if m.id in unread %}<span class="badge b-orange">New</span>{% endif %}<div class="small"><a class="orange strong" href="mailto:{{ m.email }}">{{ m.email }}</a> <span class="muted">- {{ m.created_at|dt }}</span></div><p class="mt" style="white-space:pre-wrap">{{ m.message }}</p></div>
+    <form method="post" action="{{ url_for('admin_message_delete', message_id=m.id) }}">{{ csrf() }}<button class="icon-btn" type="submit" aria-label="Delete message" data-confirm="Delete this message?">{{ icon('trash', 18) }}</button></form></div>
+  {% else %}{{ empty('No messages', 'Messages from visitors appear here.') }}{% endfor %}
+</div>
+{% endblock %}

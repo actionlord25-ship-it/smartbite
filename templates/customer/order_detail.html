@@ -1,0 +1,42 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, status_badge, pay_badge, tracker with context %}
+{% block title %}Order #{{ order.id }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Order #{{ order.id }}</h1><p>Placed {{ order.created_at|dt }} from <strong>{{ order.restaurant.name }}</strong></p></div>
+  <div class="row">{{ status_badge(order.status) }}{{ pay_badge(order) }}</div></div>
+<div class="card pad mb">{{ tracker(order) }}</div>
+{% if order.payment_method == 'online' and order.status == 'placed' and order.payment_status in ('pending', 'rejected', 'awaiting_verification') %}
+  <div class="alert alert-warn">{{ icon('wallet') }}<span>{{ 'Payment proof under verification.' if order.payment_status == 'awaiting_verification' else 'Your online payment is not confirmed yet.' }} <a class="strong orange" href="{{ url_for('customer_payment', order_id=order.id) }}">Open payment page</a></span></div>
+{% endif %}
+<div class="grid g2" style="align-items:start">
+  <div class="card pad"><h3 class="mb">Items</h3>
+    <ul class="item-list">{% for i in order.items %}<li><span>{{ i.quantity }} x {{ i.food_name }}</span><span>{{ (i.price * i.quantity)|naira }}</span></li>{% endfor %}</ul>
+    <div class="totals mt"><div><span>Food total</span><span>{{ order.subtotal|naira }}</span></div><div><span>Service charge</span><span>{{ order.service_charge|naira }}</span></div><div><span>Platform fee</span><span>{{ order.commission|naira }}</span></div><div class="grand"><span>Total</span><span>{{ order.total_amount|naira }}</span></div></div>
+  </div>
+  <div class="card pad"><h3 class="mb">Delivery</h3><div class="alert alert-info small">{{ icon('clock', 16) }}<span><strong>Estimated delivery:</strong> {{ delivery_eta(order) }}. This is an estimate and may change with traffic and preparation time.</span></div>
+    <dl class="kv"><dt>Address</dt><dd>{{ order.delivery_address }}</dd><dt>Phone</dt><dd>{{ order.customer_phone }}</dd>
+      <dt>Payment</dt><dd>{{ 'Cash on delivery' if order.payment_method == 'cod' else 'Online payment' }}</dd>
+      {% if order.note %}<dt>Note</dt><dd>{{ order.note }}</dd>{% endif %}
+      <dt>Rider</dt><dd>{% if order.rider %}{{ order.rider.name }}{% if order.rider.phone %} ({{ order.rider.phone }}){% endif %}{% else %}Not assigned yet{% endif %}</dd></dl>
+    <div class="row mt">
+      {% if order.status == 'placed' %}<form method="post" action="{{ url_for('customer_cancel_order', order_id=order.id) }}">{{ csrf() }}<button class="btn btn-danger btn-sm" type="submit" data-confirm="Cancel this order?">Cancel order</button></form>{% endif %}
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('customer_menu', restaurant_id=order.restaurant_id) }}">Order again</a>
+    </div>
+  </div>
+</div>
+{% if order.status == 'delivered' %}
+<div class="card pad mt">
+  {% if review %}<h3>Your review</h3><p class="mt">{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}</p>{% if review.comment %}<p class="muted">{{ review.comment }}</p>{% endif %}
+  {% else %}
+  <h3 class="mb">Rate {{ order.restaurant.name }}</h3>
+  <form method="post" action="{{ url_for('customer_review', order_id=order.id) }}">{{ csrf() }}
+    <div class="stars" role="radiogroup" aria-label="Rating">
+      {% for n in [5,4,3,2,1] %}<input type="radio" id="star{{ n }}" name="rating" value="{{ n }}" required><label for="star{{ n }}" title="{{ n }} star{{ '' if n == 1 else 's' }}">&#9733;</label>{% endfor %}
+    </div>
+    <label class="field mt"><span>Comment (optional)</span><textarea name="comment" maxlength="800" placeholder="How was the food and delivery?"></textarea></label>
+    <button class="btn btn-primary" type="submit">Submit review</button>
+  </form>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

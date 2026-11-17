@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} - SmartBite{% endblock %}
+{% block content %}
+<section class="section" style="min-height:60vh;display:grid;place-items:center">
+  <div class="container center">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="" width="84" height="84" style="margin:0 auto 1rem">
+    <h1>{{ code }}</h1>
+    <h2 class="mt">{{ title }}</h2>
+    <p class="muted mt">{{ text }}</p>
+    <p class="mt-2"><a class="btn btn-primary" href="{{ home_url }}">Go back home</a></p>
+  </div>
+</section>
+{% endblock %}

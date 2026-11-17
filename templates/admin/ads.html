@@ -1,0 +1,17 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, empty with context %}
+{% block title %}Sponsored Ads{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Sponsored ads</h1><p>Weekly price: <strong>{{ price|naira }}</strong>. <a class="orange strong" href="{{ url_for('admin_settings') }}">Change price</a></p></div></div>
+<div class="card"><div class="table-wrap"><table class="table"><thead><tr><th>Restaurant</th><th>Weeks</th><th>Amount</th><th>Proof</th><th>Requested</th><th>Status</th><th></th></tr></thead><tbody>
+{% for a in ads %}
+<tr><td><strong>{{ a.restaurant.name }}</strong></td><td>{{ a.weeks }}</td><td>{{ a.amount|naira }}</td>
+  <td>{% if a.proof_image %}<a href="{{ url_for('static', filename=a.proof_image) }}" target="_blank" rel="noopener"><img class="thumb" src="{{ url_for('static', filename=a.proof_image) }}" alt="Ad payment proof"></a>{% else %}-{% endif %}</td>
+  <td>{{ a.created_at|dt }}</td>
+  <td><span class="badge {{ 'b-green' if a.is_live else ('b-orange' if a.status == 'pending' else ('b-red' if a.status == 'rejected' else '')) }}">{{ 'Live' if a.is_live else ('Scheduled/ended' if a.status == 'approved' else a.status|capitalize) }}</span>{% if a.ends_at %}<div class="tiny muted">until {{ a.ends_at|dday }}</div>{% endif %}</td>
+  <td class="right">{% if a.status == 'pending' %}<div class="row" style="justify-content:flex-end">
+    <form method="post" action="{{ url_for('admin_ad_decide', ad_id=a.id, decision='approve') }}">{{ csrf() }}<button class="btn btn-green btn-sm" type="submit" data-confirm="Approve this ad and start it now?">Approve</button></form>
+    <form method="post" action="{{ url_for('admin_ad_decide', ad_id=a.id, decision='reject') }}">{{ csrf() }}<button class="btn btn-danger btn-sm" type="submit" data-confirm="Reject this ad request?">Reject</button></form></div>{% endif %}</td></tr>
+{% else %}<tr><td colspan="7">{{ empty('No ad requests yet', 'Restaurants request sponsored placement from their dashboard.') }}</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

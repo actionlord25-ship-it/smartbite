@@ -1,0 +1,22 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import chart, empty with context %}
+{% block title %}Earnings{% endblock %}
+{% block scripts %}{% include 'partials/chartjs.html' %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Earnings</h1><p>Based on delivered orders.</p></div></div>
+<div class="stats">
+  <div class="stat"><div class="k">Total sales (customers paid)</div><div class="v">{{ totals.gross|naira }}</div></div>
+  <div class="stat"><div class="k">Commission deducted</div><div class="v">{{ totals.commission|naira }}</div></div>
+  <div class="stat"><div class="k">Service charges deducted</div><div class="v">{{ totals.service|naira }}</div></div>
+  <div class="stat accent"><div class="k">Net profit</div><div class="v">{{ totals.net|naira }}</div></div>
+  <div class="stat leaf"><div class="k">Net this month</div><div class="v">{{ totals.month_net|naira }}</div></div>
+  <div class="stat"><div class="k">Monthly payroll</div><div class="v">{{ totals.payroll|naira }}</div></div>
+  <div class="stat"><div class="k">This month after payroll</div><div class="v">{{ totals.month_profit|naira }}</div></div>
+  <div class="stat"><div class="k">Delivered orders</div><div class="v">{{ totals.orders }}</div></div>
+</div>
+<div class="card pad mb"><h3 class="mb">Net earnings - last 30 days</h3>{{ chart('earnings', earnings_chart) }}</div>
+<div class="card"><div class="card-head"><h3>Recent delivered orders</h3></div><div class="table-wrap"><table class="table">
+  <thead><tr><th>Order</th><th>Date</th><th>Customer paid</th><th>Commission</th><th>Service charge</th><th>Net</th></tr></thead><tbody>
+  {% for o in recent %}<tr><td>#{{ o.id }}</td><td>{{ o.created_at|dt }}</td><td>{{ o.total_amount|naira }}</td><td>-{{ o.commission|naira }}</td><td>-{{ o.service_charge|naira }}</td><td class="strong">{{ o.subtotal|naira }}</td></tr>
+  {% else %}<tr><td colspan="6">{{ empty('No delivered orders yet', 'Earnings appear after your first delivery.') }}</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

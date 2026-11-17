@@ -1,0 +1,9 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import proof_card, pager, empty with context %}
+{% block title %}All Payment Proofs{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>All payment proofs</h1><p>Restaurants verify their own payments; you can step in at any time.</p></div></div>
+<div class="tabs">{% for key, label in [('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected'), ('all', 'All')] %}<a class="tab {{ 'active' if status == key else '' }}" href="{{ url_for('admin_proofs', status=key) }}">{{ label }}</a>{% endfor %}</div>
+{% if pagination.items %}<div class="proof-grid">{% for p in pagination.items %}{{ proof_card(p, true) }}{% endfor %}</div>{% else %}<div class="card">{{ empty('No proofs here', 'Nothing matches this filter.') }}</div>{% endif %}
+{{ pager(pagination) }}
+{% endblock %}

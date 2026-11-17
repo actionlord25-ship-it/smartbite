@@ -1,0 +1,10 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import status_badge, pager, empty with context %}
+{% block title %}Delivery History{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Delivery history</h1><p>Completed and cancelled deliveries.</p></div></div>
+<div class="card"><div class="table-wrap"><table class="table"><thead><tr><th>Order</th><th>Restaurant</th><th>Customer</th><th>Delivered</th><th>Earned</th><th>Status</th></tr></thead><tbody>
+  {% for o in pagination.items %}<tr><td>#{{ o.id }}</td><td>{{ o.restaurant.name }}</td><td>{{ o.customer.name }}</td><td>{{ (o.delivered_at or o.updated_at)|dt }}</td><td>{{ o.rider_fee|naira if o.status == 'delivered' else '-' }}</td><td>{{ status_badge(o.status) }}</td></tr>
+  {% else %}<tr><td colspan="6">{{ empty('No history yet', 'Finished deliveries are listed here.') }}</td></tr>{% endfor %}</tbody></table></div></div>
+{{ pager(pagination) }}
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, pager, empty with context %}
+{% block title %}Manage Restaurants{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Manage restaurants</h1><p>Approve new restaurants before customers can see them.</p></div></div>
+<div class="tabs">{% for key, label in [('', 'All'), ('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')] %}<a class="tab {{ 'active' if status == key else '' }}" href="{{ url_for('admin_restaurants', status=key or None) }}">{{ label }}</a>{% endfor %}</div>
+<div class="card"><div class="table-wrap"><table class="table"><thead><tr><th></th><th>Restaurant</th><th>Owner</th><th>Contact</th><th>Status</th><th></th></tr></thead><tbody>
+{% for r in pagination.items %}
+<tr><td><img class="thumb" src="{{ img_url(r.image, 'restaurant') }}" alt=""></td><td><strong>{{ r.name }}</strong>{% if r.id in ad_ids %} <span class="badge b-sponsor">Sponsored</span>{% endif %}<div class="tiny muted">{{ r.address|truncate(48) }}</div></td>
+  <td>{{ r.owner.name }}<div class="tiny muted">{{ r.owner.email }}</div></td><td>{{ r.phone or '-' }}</td>
+  <td><span class="badge {{ {'approved':'b-green','pending':'b-orange','rejected':'b-red'}.get(r.status, '') }}">{{ r.status|capitalize }}</span></td>
+  <td class="right"><div class="row" style="justify-content:flex-end">
+    {% if r.status != 'approved' %}<form method="post" action="{{ url_for('admin_restaurant_action', restaurant_id=r.id, action='approve') }}">{{ csrf() }}<button class="btn btn-green btn-sm" type="submit">{{ icon('check', 14) }} Approve</button></form>{% endif %}
+    {% if r.status != 'rejected' %}<form method="post" action="{{ url_for('admin_restaurant_action', restaurant_id=r.id, action='reject') }}">{{ csrf() }}<button class="btn btn-danger btn-sm" type="submit" data-confirm="{{ 'Remove ' ~ r.name ~ ' from customers? ' if r.status == 'approved' else '' }}Reject {{ r.name }}?">{{ icon('close', 14) }} Reject</button></form>{% endif %}</div></td></tr>
+{% else %}<tr><td colspan="6">{{ empty('No restaurants here', 'Nothing matches this filter.') }}</td></tr>{% endfor %}
+</tbody></table></div></div>
+{{ pager(pagination) }}
+{% endblock %}

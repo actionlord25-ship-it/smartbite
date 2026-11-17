@@ -1,0 +1,50 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import status_badge, tracker, empty with context %}
+{% block title %}Order Tracking{% endblock %}
+{% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><style>.live-map{height:260px;border-radius:14px;overflow:hidden;margin-top:14px;background:#f1f5f9}.gps-note{font-size:.85rem;color:var(--muted,#64748b);margin-top:8px}.gps-pill{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;padding:5px 9px;border-radius:99px;background:#ecfdf5;color:#047857}</style>{% endblock %}
+{% block scripts %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(() => {
+  document.querySelectorAll('[data-live-order]').forEach((card) => {
+    const orderId = card.dataset.liveOrder;
+    const mapEl = card.querySelector('.live-map');
+    const note = card.querySelector('[data-gps-note]');
+    if (!mapEl || !window.L) { if(note) note.textContent = 'Map library could not load. Check your internet connection.'; return; }
+    const map = L.map(mapEl).setView([6.5244, 3.3792], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+    let marker = null;
+    async function refresh() {
+      try {
+        const response = await fetch(`/customer/api/order/${orderId}/location`, {headers:{'X-Requested-With':'fetch'}});
+        const data = await response.json();
+        if (data.latitude !== undefined && data.longitude !== undefined) {
+          const point = [data.latitude, data.longitude];
+          if (!marker) { marker = L.marker(point).addTo(map).bindPopup('Your delivery rider'); map.setView(point, 16); }
+          else { marker.setLatLng(point); }
+          if(note) note.textContent = data.message + (data.updated_at ? ' Last update: ' + new Date(data.updated_at).toLocaleTimeString() : '');
+        } else if(note) note.textContent = data.message || 'Waiting for rider GPS.';
+      } catch (e) { if(note) note.textContent = 'Unable to refresh rider location. Retrying…'; }
+    }
+    refresh(); setInterval(refresh, 5000);
+  });
+})();
+</script>{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Order tracking</h1><p>Updates every few seconds while this page is open.</p></div></div>
+{% for o in active %}
+<div class="card order-card" {% if o.rider_id and o.status not in ('delivered', 'cancelled') %}data-live-order="{{ o.id }}"{% endif %}>
+  <div class="row between"><div><strong>Order #{{ o.id }}</strong> <span class="muted">from {{ o.restaurant.name }}</span></div>{{ status_badge(o.status) }}</div>
+  {{ tracker(o) }}
+  <p class="small muted mt"><strong>Estimated delivery:</strong> {{ delivery_eta(o) }}. Timing may change with traffic and restaurant preparation.</p>
+  {% if o.rider_id and o.status not in ('delivered', 'cancelled') %}<div class="row between mt"><strong>Live rider location</strong><span class="gps-pill">● Live map</span></div><div class="live-map" role="application" aria-label="Live rider location map for order {{ o.id }}"></div><p class="gps-note" data-gps-note>Waiting for your rider to share GPS location…</p>{% elif o.rider_id %}<p class="gps-note">Live tracking ended for this order.</p>{% endif %}
+  <div class="row between mt"><span class="small muted">{% if o.rider %}Rider: {{ o.rider.name }}{% if o.rider.phone %} - {{ o.rider.phone }}{% endif %}{% else %}A rider will be assigned once the order is confirmed.{% endif %}</span>
+    <span class="row">
+      {% if o.payment_method == 'online' and o.payment_status in ('pending', 'rejected') %}<a class="btn btn-primary btn-sm" href="{{ url_for('customer_payment', order_id=o.id) }}">Complete payment</a>{% endif %}
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('customer_order_detail', order_id=o.id) }}">Details</a></span></div>
+</div>
+{% else %}
+<div class="card">{{ empty('No active orders', 'When you place an order you can follow it here, step by step.', url_for('customer_restaurants'), 'Browse restaurants') }}</div>
+{% endfor %}
+{% if recent %}<div class="section-title"><h2>Recently finished</h2></div>
+<div class="card">{% for o in recent %}<div class="line"><div class="grow"><strong>Order #{{ o.id }}</strong> <span class="muted">{{ o.restaurant.name }}</span></div>{{ status_badge(o.status) }}<a class="btn btn-ghost btn-sm" href="{{ url_for('customer_order_detail', order_id=o.id) }}">View</a></div>{% endfor %}</div>{% endif %}
+{% endblock %}

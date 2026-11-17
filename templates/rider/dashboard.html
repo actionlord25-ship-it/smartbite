@@ -1,0 +1,41 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import status_badge, empty with context %}
+{% block title %}Rider Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Rider dashboard</h1><p>Welcome back, {{ current_user.name.split(' ')[0] }}. Here is your delivery activity.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('rider_available') }}">{{ icon('bag', 16) }} Find deliveries</a>
+</div>
+<div class="stats">
+  <div class="stat accent"><div class="k">Active deliveries</div><div class="v">{{ active|length }} / {{ max_active }}</div></div>
+  <div class="stat"><div class="k">Available orders</div><div class="v">{{ available_count }}</div></div>
+  <div class="stat leaf"><div class="k">Completed today</div><div class="v">{{ completed_today }}</div></div>
+  <div class="stat"><div class="k">Earned today</div><div class="v">{{ earned_today|naira }}</div></div>
+</div>
+<div class="section-title"><h2>My active deliveries</h2><a class="small orange strong" href="{{ url_for('rider_deliveries') }}">View all</a></div>
+{% for o in active %}
+  <div class="card order-card">
+    <div class="row between"><strong>Order #{{ o.id }} · {{ o.restaurant.name }}</strong>{{ status_badge(o.status) }}</div>
+    <div class="grid g2 mt">
+      <div><div class="small muted">Pickup</div><strong>{{ o.restaurant.name }}</strong><div class="small">{{ o.restaurant.address or 'Pickup address not provided' }}</div></div>
+      <div><div class="small muted">Delivery</div><strong>{{ o.customer.name }}</strong><div class="small">{{ o.delivery_address }}</div></div>
+    </div>
+    <div class="row mt">
+      <a class="btn btn-primary btn-sm" href="{{ url_for('rider_deliveries') }}">Update delivery</a>
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('rider_map', order=o.id) }}">{{ icon('map', 15) }} Open route</a>
+    </div>
+  </div>
+{% else %}
+  <div class="card">{{ empty('No active deliveries', 'Accept an available order to see its pickup and delivery details here.', url_for('rider_available'), 'Browse available orders') }}</div>
+{% endfor %}
+<div class="section-title"><h2>Recent delivery activity</h2><a class="small orange strong" href="{{ url_for('rider_history') }}">Delivery history</a></div>
+<div class="card">
+  {% if recent %}<div class="table-wrap"><table class="table"><thead><tr><th>Order</th><th>Restaurant</th><th>Last updated</th><th>Status</th></tr></thead><tbody>
+  {% for o in recent %}<tr><td>#{{ o.id }}</td><td>{{ o.restaurant.name }}</td><td>{{ o.updated_at|dt }}</td><td>{{ status_badge(o.status) }}</td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<p class="muted small" style="padding: 0 0 0 8px;">Your delivery activity will appear here.</p>{% endif %}
+</div>
+<div class="grid g2 mt">
+  <a class="card pad" href="{{ url_for('rider_map') }}"><h3>{{ icon('map', 18) }} Route map</h3><p class="small muted">View pickup and drop-off stops and share live GPS during an active delivery.</p></a>
+  <a class="card pad" href="{{ url_for('rider_earnings') }}"><h3>{{ icon('wallet', 18) }} Earnings</h3><p class="small muted">Review completed delivery fees and your earnings summary.</p></a>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, empty with context %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Notifications</h1><p>Updates about your orders and account.</p></div>
+  {% if items %}<form method="post" action="{{ url_for('notifications_clear') }}">{{ csrf() }}<button class="btn btn-ghost btn-sm" type="submit" data-confirm="Delete all notifications?">{{ icon('trash', 16) }} Clear all</button></form>{% endif %}</div>
+<div class="card">
+  {% for n in items %}
+    <div class="line">
+      <span class="icon-btn" style="flex:none">{{ icon('bell', 18) }}</span>
+      <div class="grow"><strong>{{ n.title }}</strong>{% if n.id in unread_ids %} <span class="badge b-orange">New</span>{% endif %}
+        {% if n.message %}<div class="small muted">{{ n.message }}</div>{% endif %}<div class="tiny muted">{{ n.created_at|ago }}</div></div>
+      {% if n.link %}<a class="btn btn-ghost btn-sm" href="{{ n.link }}">View</a>{% endif %}
+    </div>
+  {% else %}
+    {{ empty('You are all caught up', 'New order updates and alerts will appear here.') }}
+  {% endfor %}
+</div>
+{% endblock %}

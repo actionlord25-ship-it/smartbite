@@ -1,0 +1,16 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, empty with context %}
+{% block title %}Fraud Alerts{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Fraud alerts</h1><p>Flagged automatically: more than 5 orders from one customer within 10 minutes, or an order above &#8358;50,000.</p></div>
+  <form method="post" action="{{ url_for('admin_fraud_scan') }}">{{ csrf() }}<button class="btn btn-outline" type="submit">{{ icon('sparkle', 16) }} Re-scan all orders</button></form></div>
+<div class="card"><div class="table-wrap"><table class="table"><thead><tr><th>When</th><th>Order</th><th>Customer</th><th>Reason</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>
+{% for f in flags %}
+<tr><td>{{ f.created_at|dt }}</td><td>#{{ f.order_id }}</td><td><strong>{{ f.user.name }}</strong><div class="tiny muted">{{ f.user.email }}</div></td><td>{{ f.reason }}</td><td>{{ f.order.total_amount|naira }}</td>
+  <td><span class="badge {{ 'b-red' if f.status == 'open' else 'b-green' }}">{{ 'Open' if f.status == 'open' else 'Reviewed' }}</span></td>
+  <td class="right"><div class="row" style="justify-content:flex-end">
+    {% if f.status == 'open' %}<form method="post" action="{{ url_for('admin_fraud_review', flag_id=f.id) }}">{{ csrf() }}<button class="btn btn-ghost btn-sm" type="submit">Mark reviewed</button></form>{% endif %}
+    {% if f.user.active and f.user.role != 'admin' %}<form method="post" action="{{ url_for('admin_user_toggle', user_id=f.user.id) }}">{{ csrf() }}<button class="btn btn-danger btn-sm" type="submit" data-confirm="Deactivate {{ f.user.name }}?">Deactivate user</button></form>{% endif %}</div></td></tr>
+{% else %}<tr><td colspan="7">{{ empty('No suspicious activity', 'Alerts appear here the moment an order trips a rule.') }}</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

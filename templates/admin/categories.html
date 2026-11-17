@@ -1,0 +1,21 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, empty with context %}
+{% block title %}Manage Categories{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Manage categories</h1><p>Restaurants pick from these when adding dishes.</p></div></div>
+<div class="grid" style="grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);align-items:start">
+  <div class="card">
+    {% for c in categories %}
+    <form class="line" method="post" action="{{ url_for('admin_category_rename', category_id=c.id) }}">{{ csrf() }}
+      <input class="input grow" name="name" value="{{ c.name }}" maxlength="50" aria-label="Category name" required>
+      <span class="badge">{{ usage.get(c.name, 0) }} dish{{ '' if usage.get(c.name, 0) == 1 else 'es' }}</span>
+      <button class="btn btn-ghost btn-sm" type="submit">Rename</button>
+      <button class="btn btn-danger btn-sm" type="submit" formaction="{{ url_for('admin_category_delete', category_id=c.id) }}" data-confirm="Delete the category {{ c.name }}?">{{ icon('trash', 14) }}</button>
+    </form>
+    {% else %}{{ empty('No categories', 'Add your first category.') }}{% endfor %}
+  </div>
+  <form class="card pad" method="post">{{ csrf() }}<h3 class="mb">Add category</h3>
+    <label class="field"><span>Name</span><input name="name" required maxlength="50" placeholder="e.g. Vegetarian"></label>
+    <button class="btn btn-primary btn-block" type="submit">{{ icon('plus', 16) }} Add category</button></form>
+</div>
+{% endblock %}

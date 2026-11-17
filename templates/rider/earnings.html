@@ -1,0 +1,15 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import chart with context %}
+{% block title %}Earnings{% endblock %}
+{% block scripts %}{% include 'partials/chartjs.html' %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Earnings</h1><p>Paid per completed delivery.</p></div></div>
+<div class="stats">
+  <div class="stat accent"><div class="k">Today</div><div class="v">{{ totals.today|naira }}</div></div>
+  <div class="stat"><div class="k">This week</div><div class="v">{{ totals.week|naira }}</div></div>
+  <div class="stat"><div class="k">This month</div><div class="v">{{ totals.month|naira }}</div></div>
+  <div class="stat leaf"><div class="k">All time</div><div class="v">{{ totals.all|naira }}</div></div>
+  <div class="stat"><div class="k">Deliveries completed</div><div class="v">{{ totals.count }}</div></div>
+</div>
+<div class="card pad"><h3 class="mb">Last 14 days</h3>{{ chart('rider_earnings', earnings_chart) }}</div>
+{% endblock %}

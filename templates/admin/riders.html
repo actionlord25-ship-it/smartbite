@@ -1,0 +1,13 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, empty with context %}
+{% block title %}Manage Riders{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Manage riders</h1><p>Delivery performance and account status.</p></div></div>
+<div class="card"><div class="table-wrap"><table class="table"><thead><tr><th></th><th>Rider</th><th>Phone</th><th>Active now</th><th>Deliveries</th><th>Earned</th><th>Status</th><th></th></tr></thead><tbody>
+{% for u in riders %}{% set s = stats.get(u.id, (0, 0)) %}
+<tr><td><img class="thumb" style="border-radius:50%" src="{{ img_url(u.profile_image, 'avatar') }}" alt=""></td><td><strong>{{ u.name }}</strong><div class="tiny muted">{{ u.email }}</div></td><td>{{ u.phone or '-' }}</td><td>{{ active.get(u.id, 0) }}</td><td>{{ s[0] }}</td><td>{{ s[1]|naira }}</td>
+  <td><span class="badge {{ 'b-green' if u.active else 'b-red' }}">{{ 'Active' if u.active else 'Deactivated' }}</span></td>
+  <td class="right"><form method="post" action="{{ url_for('admin_user_toggle', user_id=u.id) }}">{{ csrf() }}<button class="btn btn-ghost btn-sm" type="submit" data-confirm="{{ 'Deactivate' if u.active else 'Reactivate' }} {{ u.name }}?">{{ 'Deactivate' if u.active else 'Activate' }}</button></form></td></tr>
+{% else %}<tr><td colspan="8">{{ empty('No riders yet', 'Riders appear here after they sign up.') }}</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

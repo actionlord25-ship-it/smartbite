@@ -1,0 +1,138 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro field(label, name, type='text', value='', required=False, placeholder='', extra='', hint='') %}
+<label class="field"><span>{{ label }}{% if required %} *{% endif %}</span>
+  <input type="{{ type }}" name="{{ name }}" value="{{ value if value is not none else '' }}" placeholder="{{ placeholder }}" {% if required %}required{% endif %} {{ extra|safe }}>
+  {% if hint %}<small>{{ hint }}</small>{% endif %}</label>
+{% endmacro %}
+
+{% macro status_badge(status) %}
+{% set cls = {'placed':'b-blue','confirmed':'b-blue','preparing':'b-orange','out_for_delivery':'b-orange','delivered':'b-green','cancelled':'b-red'} %}
+<span class="badge {{ cls.get(status, '') }}">{{ status|status_label }}</span>
+{% endmacro %}
+
+{% macro pay_badge(order) %}
+{% if order.payment_method == 'cod' %}
+  <span class="badge {{ 'b-green' if order.payment_status == 'paid' else '' }}">{{ 'Cash - paid' if order.payment_status == 'paid' else 'Cash on delivery' }}</span>
+{% else %}
+  <span class="badge {{ {'paid':'b-green','awaiting_verification':'b-orange','rejected':'b-red'}.get(order.payment_status, '') }}">{{ order.payment_status|pay_label }}</span>
+{% endif %}
+{% endmacro %}
+
+{% macro tracker(order, live=True) %}
+{% if order.status == 'cancelled' %}
+  <div class="alert alert-error">{{ icon('alert') }}<span>Order #{{ order.id }} was cancelled.</span></div>
+{% else %}
+  {% set steps = [('placed','Placed'),('confirmed','Confirmed'),('preparing','Preparing'),('out_for_delivery','Out for Delivery'),('delivered','Delivered')] %}
+  {% set idx = ['placed','confirmed','preparing','out_for_delivery','delivered'].index(order.status) %}
+  <div class="tracker" role="list" data-track-order="{{ order.id }}" data-status="{{ order.status }}" {% if live %}data-url="{{ url_for('customer_order_status', order_id=order.id) }}"{% endif %}>
+    <span class="fill" style="width: {{ (idx / 4 * 90)|round(0) }}%"></span>
+    {% for key, label in steps %}
+      <div role="listitem" data-step="{{ key }}" class="{{ 'done' if loop.index0 < idx else ('current' if loop.index0 == idx else '') }}"><span class="dot">{{ icon('check', 16) }}</span>{{ label }}</div>
+    {% endfor %}
+  </div>
+  {% if order.rider_stage and order.status == 'out_for_delivery' %}
+    <p class="small muted center">Rider update: {{ {'assigned':'Rider assigned','picked':'Picked up your food','on_the_way':'On the way to you'}.get(order.rider_stage, '') }}</p>
+  {% endif %}
+{% endif %}
+{% endmacro %}
+
+{% macro rating(value) %}<span class="rating">{{ icon('star', 14) }} {{ '%.1f'|format(value or 0) }}</span>{% endmacro %}
+
+{% macro empty(title, text='', url='', label='') %}
+<div class="empty"><h3>{{ title }}</h3>{% if text %}<p>{{ text }}</p>{% endif %}{% if url %}<a class="btn btn-primary" href="{{ url }}">{{ label }}</a>{% endif %}</div>
+{% endmacro %}
+
+{% macro pager(p) %}
+{% if p.pages > 1 %}
+<nav class="pager" aria-label="Pagination">
+  {% if p.has_prev %}<a class="btn btn-ghost btn-sm" href="{{ page_url(p.prev_num) }}">Previous</a>{% endif %}
+  <span>Page {{ p.page }} of {{ p.pages }}</span>
+  {% if p.has_next %}<a class="btn btn-ghost btn-sm" href="{{ page_url(p.next_num) }}">Next</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro food_card(f, favs=[], show_rest=True, mode='order') %}
+<article class="card food-card">
+  <div class="media"><img src="{{ img_url(f.image, 'food') }}" alt="{{ f.name }}" loading="lazy">
+    {% if mode == 'order' %}<button type="button" class="fav-btn {{ 'active' if f.id in favs else '' }}" data-fav="food" data-id="{{ f.id }}" data-url="{{ url_for('favorite_toggle') }}" aria-label="Add {{ f.name }} to favorites">{{ icon('heart', 18) }}</button>{% endif %}
+    {% if not f.is_available %}<div class="closed-mask">Unavailable</div>{% endif %}
+  </div>
+  <div class="card-body">
+    <h3>{{ f.name }}</h3>
+    {% if show_rest %}<div class="meta"><span>{{ f.restaurant.name }}</span>{{ rating(f.restaurant.rating) }}</div>{% endif %}
+    {% if f.description %}<p class="small muted">{{ f.description|truncate(80) }}</p>{% endif %}
+    <div class="food-foot">
+      <span class="price">{{ f.price|naira }}</span>
+      {% if mode == 'order' and f.is_available and f.restaurant.is_open %}
+        <form class="js-cart-add" method="post" action="{{ url_for('cart_add') }}">{{ csrf() }}<input type="hidden" name="food_id" value="{{ f.id }}"><input type="hidden" name="quantity" value="1"><button class="btn btn-primary btn-sm" type="submit">{{ icon('plus', 16) }} Add</button></form>
+      {% elif mode == 'view' %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('customer_menu', restaurant_id=f.restaurant_id) }}">Order</a>
+      {% endif %}
+    </div>
+  </div>
+</article>
+{% endmacro %}
+
+{% macro rest_card(r, ad_ids=[], favs=[], mode='order') %}
+<article class="card rest-card">
+  <div class="media"><a href="{{ url_for('customer_menu', restaurant_id=r.id) }}" aria-label="Open {{ r.name }}"><img src="{{ img_url(r.image, 'restaurant') }}" alt="" loading="lazy"></a>
+    {% if r.id in ad_ids %}<span class="badge b-sponsor corner">Sponsored</span>{% endif %}
+    {% if mode == 'order' %}<button type="button" class="fav-btn {{ 'active' if r.id in favs else '' }}" data-fav="restaurant" data-id="{{ r.id }}" data-url="{{ url_for('favorite_toggle') }}" aria-label="Add {{ r.name }} to favorites">{{ icon('heart', 18) }}</button>{% endif %}
+    {% if not r.is_open %}<div class="closed-mask">Closed right now</div>{% endif %}
+  </div>
+  <div class="card-body">
+    <h3><a href="{{ url_for('customer_menu', restaurant_id=r.id) }}">{{ r.name }}</a></h3>
+    <div class="meta">{{ rating(r.rating) }}<span>{{ icon('clock', 14) }} {{ r.delivery_time or 35 }} min</span>{% if r.rating_count %}<span>{{ r.rating_count }} review{{ '' if r.rating_count == 1 else 's' }}</span>{% endif %}</div>
+    <p class="small muted">{{ (r.description or r.address or '')|truncate(90) }}</p>
+  </div>
+</article>
+{% endmacro %}
+
+{% macro proof_card(p, show_restaurant=False) %}
+<article class="card proof-card">
+  <a href="{{ url_for('static', filename=p.image_path) }}" target="_blank" rel="noopener"><img class="proof-img" src="{{ url_for('static', filename=p.image_path) }}" alt="Payment proof for order {{ p.order_id }}" loading="lazy"></a>
+  <div class="pad col">
+    <div class="row between"><strong>Order #{{ p.order_id }}</strong>
+      <span class="badge {{ {'pending':'b-orange','approved':'b-green','rejected':'b-red'}[p.status] }}">{{ p.status|capitalize }}</span></div>
+    <div class="small">{{ p.customer.name }} paid {{ p.order.total_amount|naira }}</div>
+    {% if show_restaurant %}<div class="small muted">Restaurant: {{ p.order.restaurant.name }}</div>{% endif %}
+    <div class="tiny muted">Uploaded {{ p.uploaded_at|dt }}</div>
+    {% if p.note %}<div class="small muted">Note: {{ p.note }}</div>{% endif %}
+    {% if p.status == 'pending' %}
+    <form method="post" action="{{ url_for('proof_decide', proof_id=p.id) }}" class="col">{{ csrf() }}
+      <input class="input" name="note" maxlength="200" placeholder="Reason (optional - sent to customer if rejected)" aria-label="Rejection reason">
+      <div class="row">
+        <button type="submit" name="decision" value="approve" class="btn btn-green btn-sm" data-confirm="Approve this payment? The order will move to Confirmed.">{{ icon('check', 16) }} Approve</button>
+        <button type="submit" name="decision" value="reject" class="btn btn-danger btn-sm" data-confirm="Reject this proof of payment? The customer will be notified.">{{ icon('close', 16) }} Reject</button>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+</article>
+{% endmacro %}
+
+{% macro search_results(res, favs=[], mode='order', ad_ids=[]) %}
+{% set p = res.parsed %}
+<div class="row mb">
+  <span class="ai-tag">{{ icon('sparkle', 14) }} Smart Search</span>
+  {% if p.terms %}<span class="small muted">Looking for</span>{% for t in p.terms %}<span class="badge b-orange">{{ t }}</span>{% endfor %}{% endif %}
+  {% if p.min is not none %}<span class="badge b-blue">over {{ p.min|naira }}</span>{% endif %}
+  {% if p.max is not none %}<span class="badge b-blue">under {{ p.max|naira }}</span>{% endif %}
+</div>
+{% if res.relaxed %}<div class="alert alert-info">{{ icon('info') }}<span>No dish matched every word, so these match at least one of them.</span></div>{% endif %}
+{% if res.restaurants %}
+  <h2 class="mb">Restaurants</h2><div class="auto-grid mb">{% for r in res.restaurants %}{{ rest_card(r, ad_ids, [], mode) }}{% endfor %}</div>
+{% endif %}
+{% if res.foods %}
+  <h2 class="mb">Dishes</h2><div class="auto-grid">{% for f in res.foods %}{{ food_card(f, favs, True, mode) }}{% endfor %}</div>
+{% elif not res.restaurants %}
+  <div class="card">{{ empty('Nothing matched "' ~ res.q ~ '"', 'Try fewer words or a higher price, for example "rice under 4000" or "chicken".') }}</div>
+{% endif %}
+{% endmacro %}
+
+{% macro chart(id, cfg, small=False) %}
+<div class="chart-box {{ 'sm' if small else '' }}"><canvas data-chart="{{ id }}" role="img" aria-label="{{ id|replace('_', ' ') }} chart"></canvas></div>
+<script type="application/json" id="chart-{{ id }}">{{ cfg|tojson }}</script>
+{% endmacro %}

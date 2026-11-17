@@ -1,0 +1,8 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import proof_card, empty with context %}
+{% block title %}Payment Verifications{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Payment verifications</h1><p>Check each receipt against your bank alert, then approve or reject. Approving confirms the order.</p></div></div>
+{% if proofs %}<div class="proof-grid">{% for p in proofs %}{{ proof_card(p) }}{% endfor %}</div>
+{% else %}<div class="card">{{ empty('No payment proofs yet', 'When a customer pays online and uploads a receipt, it appears here.') }}</div>{% endif %}
+{% endblock %}

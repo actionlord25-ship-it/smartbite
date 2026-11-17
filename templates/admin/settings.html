@@ -1,0 +1,34 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf with context %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+{% set sample = 5000 %}
+<div class="page-head"><div><h1>Platform settings</h1><p>Pricing, advertising, contact details and your password.</p></div></div>
+<div class="grid g2" style="align-items:start">
+  <form class="card pad" method="post">{{ csrf() }}<input type="hidden" name="section" value="pricing">
+    <h3 class="mb">Commission, service charge and rider pay</h3>
+    <label class="field"><span>Commission on every order (%)</span><input type="number" name="commission_percent" step="0.01" min="0" max="50" value="{{ '%g'|format(s.commission_percent|float) }}" required></label>
+    <label class="field"><span>Service charge on every transaction (&#8358;)</span><input type="number" name="service_charge" min="0" step="1" value="{{ s.service_charge|int }}" required></label>
+    <label class="field"><span>Rider pay per delivery (&#8358;)</span><input type="number" name="rider_fee" min="0" step="1" value="{{ s.rider_fee|int }}" required><small>Paid from platform income.</small></label>
+    <div class="alert alert-info">{{ icon('info') }}<span>Customer total = food + service charge + (food x commission / 100). Example: food &#8358;{{ '{:,}'.format(sample) }} &rarr; <strong>&#8358;{{ '{:,}'.format((sample + s.service_charge|int + (sample * s.commission_percent|float / 100)|round|int)) }}</strong>.</span></div>
+    <button class="btn btn-primary" type="submit">Save pricing</button></form>
+  <form class="card pad" method="post">{{ csrf() }}<input type="hidden" name="section" value="ads">
+    <h3 class="mb">Sponsored ads</h3>
+    <label class="field"><span>Ad price per week (&#8358;)</span><input type="number" name="ad_price_per_week" min="0" step="1" value="{{ s.ad_price_per_week|int }}" required><small>Restaurants pay this per week to be listed first.</small></label>
+    <button class="btn btn-primary" type="submit">Save ad price</button></form>
+  <form class="card pad" method="post">{{ csrf() }}<input type="hidden" name="section" value="bank">
+    <h3 class="mb">SmartBite bank details (for ad payments)</h3>
+    <label class="field"><span>Account name</span><input name="admin_account_name" maxlength="100" value="{{ s.admin_account_name }}"></label>
+    <label class="field"><span>Bank name</span><input name="admin_bank_name" maxlength="100" value="{{ s.admin_bank_name }}"></label>
+    <label class="field"><span>Account number</span><input name="admin_account_number" inputmode="numeric" pattern="[0-9]{6,20}" maxlength="20" value="{{ s.admin_account_number }}"></label>
+    <button class="btn btn-primary" type="submit">Save bank details</button></form>
+  <form class="card pad" method="post">{{ csrf() }}<input type="hidden" name="section" value="contact">
+    <h3 class="mb">Public contact details</h3>
+    <label class="field"><span>Email</span><input type="email" name="contact_email" maxlength="100" value="{{ s.contact_email }}"></label>
+    <label class="field"><span>Phone</span><input name="contact_phone" maxlength="30" value="{{ s.contact_phone }}"></label>
+    <label class="field"><span>Address</span><input name="contact_address" maxlength="200" value="{{ s.contact_address }}"></label>
+    <button class="btn btn-primary" type="submit">Save contact details</button></form>
+  {% include 'partials/password_card.html' %}
+  {% include 'partials/theme_card.html' %}
+</div>
+{% endblock %}

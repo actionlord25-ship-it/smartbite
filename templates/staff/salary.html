@@ -1,0 +1,9 @@
+{% extends 'layouts/dash.html' %}
+{% block title %}My Salary{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My salary</h1><p>Only you and your employer can see this.</p></div></div>
+<div class="grid g2">
+  <div class="stat accent" style="padding:1.6rem"><div class="k">Monthly salary</div><div class="v" style="font-size:2.4rem">{{ member.monthly_salary|naira }}</div></div>
+  <div class="card pad"><dl class="kv"><dt>Position</dt><dd>{{ member.staff_role|capitalize }}</dd><dt>Restaurant</dt><dd>{{ member.restaurant.name }}</dd><dt>Working since</dt><dd>{{ member.hired_at|dday }}</dd></dl></div>
+</div>
+{% endblock %}

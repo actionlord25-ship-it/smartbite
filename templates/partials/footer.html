@@ -1,0 +1,21 @@
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="" width="38" height="38"><span><span class="smart">Smart</span><span class="bite">Bite</span></span></a>
+        <p class="small mt">Food from approved local restaurants, delivered by riders you can follow on the map.</p>
+      </div>
+      <div><h4>Explore</h4><ul>
+        <li><a href="{{ url_for('index') }}#services">Services</a></li><li><a href="{{ url_for('index') }}#how">How it works</a></li>
+        <li><a href="{{ url_for('index') }}#testimonies">Testimonies</a></li><li><a href="{{ url_for('index') }}#about">About us</a></li></ul></div>
+      <div><h4>Join us</h4><ul>
+        <li><a href="{{ url_for('signup') }}">Order food</a></li>
+        <li><a href="{{ url_for('signup', role='restaurant_owner') }}">List your restaurant</a></li>
+        <li><a href="{{ url_for('signup', role='rider') }}">Ride with us</a></li></ul></div>
+      <div><h4>Account</h4><ul>
+        <li><a href="{{ url_for('login') }}">Login</a></li><li><a href="{{ url_for('signup') }}">Sign up</a></li>
+        <li><a href="{{ url_for('index') }}#contact">Contact us</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; {{ year }} SmartBite. All rights reserved.</span><span>Prices in Nigerian Naira (&#8358;)</span></div>
+  </div>
+</footer>

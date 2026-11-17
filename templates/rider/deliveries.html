@@ -1,0 +1,24 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, empty with context %}
+{% block title %}My Deliveries{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My deliveries</h1><p>Update each stage so the customer can follow along.</p></div>{% if orders %}<a class="btn btn-outline" href="{{ url_for('rider_map') }}">{{ icon('map', 16) }} Optimised route for all</a>{% endif %}</div>
+{% for o in orders %}
+{% set stage = o.rider_stage %}
+<div class="card order-card">
+  <div class="row between"><strong>Order #{{ o.id }}</strong><span class="badge {{ 'b-orange' if stage != 'assigned' else 'b-blue' }}">{{ {'assigned':'Go to restaurant','picked':'Picked up','on_the_way':'On the way'}.get(stage, stage) }}</span></div>
+  <div class="grid g2 mt">
+    <div><div class="small muted">Restaurant</div><strong>{{ o.restaurant.name }}</strong><div class="small">{{ o.restaurant.address }}</div>{% if o.restaurant.phone %}<a class="small orange strong" href="tel:{{ o.restaurant.phone }}">{{ icon('phone', 14) }} {{ o.restaurant.phone }}</a>{% endif %}{% if o.is_packed %}<div class="mt"><span class="badge b-green">Packed - ready</span></div>{% endif %}</div>
+    <div><div class="small muted">Customer</div><strong>{{ o.customer.name }}</strong><div class="small">{{ o.delivery_address }}</div><a class="small orange strong" href="tel:{{ o.customer_phone }}">{{ icon('phone', 14) }} {{ o.customer_phone }}</a>{% if o.note %}<div class="small muted mt">Note: {{ o.note }}</div>{% endif %}</div>
+  </div>
+  <div class="small mt">{% for i in o.items %}{{ i.quantity }} x {{ i.food_name }}{{ ', ' if not loop.last }}{% endfor %}</div>
+  <div class="strong mt">{% if o.payment_method == 'cod' %}Collect {{ o.total_amount|naira }} in cash{% else %}Already paid online{% endif %} - you earn {{ o.rider_fee|naira }}</div>
+  <div class="row mt">
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('rider_map', order=o.id) }}">{{ icon('map', 16) }} Route</a>
+    {% if stage == 'assigned' %}<form method="post" action="{{ url_for('rider_stage', order_id=o.id) }}">{{ csrf() }}<button class="btn btn-primary btn-sm" name="stage" value="picked" type="submit">Mark picked up</button></form>
+    {% elif stage == 'picked' %}<form method="post" action="{{ url_for('rider_stage', order_id=o.id) }}">{{ csrf() }}<button class="btn btn-primary btn-sm" name="stage" value="on_the_way" type="submit">Mark on the way</button></form>{% endif %}
+    {% if stage in ('picked', 'on_the_way') %}<form method="post" action="{{ url_for('rider_stage', order_id=o.id) }}">{{ csrf() }}<button class="btn btn-green btn-sm" name="stage" value="delivered" type="submit" data-confirm="Confirm that order #{{ o.id }} was handed to the customer{{ ' and you collected the cash' if o.payment_method == 'cod' else '' }}?">{{ icon('check', 16) }} Mark delivered</button></form>{% endif %}
+  </div>
+</div>
+{% else %}<div class="card">{{ empty('No active deliveries', 'Accept an order from the available list to get started.', url_for('rider_available'), 'See available orders') }}</div>{% endfor %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf, empty with context %}
+{% block title %}Available Orders{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Available orders</h1><p>Confirmed orders waiting for a rider. You earn <strong>{{ fee|naira }}</strong> per delivery.</p></div>
+  <span class="badge {{ 'b-orange' if active_count >= max_active else 'b-green' }}">{{ active_count }} / {{ max_active }} active deliveries</span></div>
+{% for o in orders %}
+<div class="card order-card">
+  <div class="row between"><strong>Order #{{ o.id }} - {{ o.restaurant.name }}</strong><span class="row"><span class="badge b-green">Earn {{ fee|naira }}</span><span class="badge {{ 'b-orange' if o.status == 'preparing' else 'b-blue' }}">{{ o.status|status_label }}</span></span></div>
+  <div class="grid g2 mt">
+    <div><div class="small muted">Pick up from</div><strong>{{ o.restaurant.name }}</strong><div class="small">{{ o.restaurant.address }}</div></div>
+    <div><div class="small muted">Deliver to (area)</div><div class="small">{{ o.delivery_address|truncate(70) }}</div><div class="tiny muted mt">{{ o.items|length }} item(s){% if o.payment_method == 'cod' %} - collect {{ o.total_amount|naira }} cash{% else %} - already paid{% endif %}</div></div>
+  </div>
+  <form method="post" action="{{ url_for('rider_accept', order_id=o.id) }}" class="mt">{{ csrf() }}<button class="btn btn-primary" type="submit" {{ 'disabled' if active_count >= max_active else '' }}>{{ icon('check', 16) }} Accept delivery</button></form>
+</div>
+{% else %}<div class="card">{{ empty('No orders waiting', 'New confirmed orders appear here. Refresh in a moment.', url_for('rider_available'), 'Refresh') }}</div>{% endfor %}
+{% endblock %}

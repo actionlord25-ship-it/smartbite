@@ -1,0 +1,7 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import search_results, empty with context %}
+{% block title %}Search{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ 'Results for "' ~ q ~ '"' if q else 'Search' }}</h1><p>Smart search understands prices: try "rice under 3000" or "chicken between 2000 and 5000".</p></div></div>
+{% if results %}{{ search_results(results, fav_foods, 'order', []) }}{% else %}<div class="card">{{ empty('Type something to search', 'Use the search box at the top of the page.') }}</div>{% endif %}
+{% endblock %}

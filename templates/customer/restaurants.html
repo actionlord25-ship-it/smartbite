@@ -1,0 +1,13 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import rest_card, empty with context %}
+{% block title %}{{ "Browse Menu" if browse_menu else "Browse Restaurants" }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ "Browse Menu" if browse_menu else "Browse restaurants" }}</h1><p>{{ "Choose a restaurant to explore its available meals and prices." if browse_menu else "Sponsored restaurants appear first." }}</p></div></div>
+<form class="card pad mb row" method="get">
+  <label class="field grow" style="margin:0"><span class="sr-only">Search</span><input type="search" name="q" value="{{ q }}" placeholder="Search restaurants by name or area" maxlength="80"></label>
+  <label class="field" style="margin:0"><span class="sr-only">Sort</span><select name="sort"><option value="rating" {{ 'selected' if sort == 'rating' else '' }}>Top rated</option><option value="time" {{ 'selected' if sort == 'time' else '' }}>Fastest delivery</option><option value="name" {{ 'selected' if sort == 'name' else '' }}>Name A-Z</option></select></label>
+  <button class="btn btn-primary" type="submit">Apply</button>
+</form>
+{% if restaurants %}<div class="auto-grid">{% for r in restaurants %}{{ rest_card(r, ad_ids, fav_restaurants) }}{% endfor %}</div>
+{% else %}<div class="card">{{ empty('No restaurants found', 'Try a different search, or check back soon as new restaurants are approved.') }}</div>{% endif %}
+{% endblock %}

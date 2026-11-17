@@ -1,0 +1,27 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import status_badge, pay_badge, empty with context %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ r.name }}</h1><p>Here is how your restaurant is doing today.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('owner_food_new') }}">{{ icon('plus', 16) }} Add a dish</a></div>
+{% if r.status == 'pending' %}<div class="alert alert-warn">{{ icon('clock') }}<span><strong>Awaiting approval.</strong> Customers will see {{ r.name }} once an administrator approves it. Meanwhile, complete your profile, bank details and menu.</span></div>
+{% elif r.status == 'rejected' %}<div class="alert alert-error">{{ icon('alert') }}<span><strong>Not approved.</strong> Update your restaurant profile and contact support to be reviewed again.</span></div>{% endif %}
+{% if not r.bank_name or not r.account_number %}<div class="alert alert-info">{{ icon('info') }}<span>Add your <a class="orange strong" href="{{ url_for('owner_profile') }}">bank details</a> so customers can pay online.</span></div>{% endif %}
+<div class="stats">
+  <div class="stat accent"><div class="k">Orders today</div><div class="v">{{ stats.today_orders }}</div></div>
+  <div class="stat"><div class="k">Sales today</div><div class="v">{{ stats.today_sales|naira }}</div></div>
+  <div class="stat"><div class="k">New orders waiting</div><div class="v">{{ stats.pending }}</div></div>
+  <div class="stat"><div class="k">Payments to verify</div><div class="v">{{ stats.verifications }}</div></div>
+  <div class="stat leaf"><div class="k">Rating</div><div class="v">{{ '%.1f'|format(stats.rating) }}</div></div>
+  <div class="stat"><div class="k">Dishes on menu</div><div class="v">{{ stats.foods }}</div></div>
+</div>
+<div class="grid" style="grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr);align-items:start">
+  <div class="card"><div class="card-head"><h3>Recent orders</h3><a class="small orange strong" href="{{ url_for('owner_orders') }}">Manage orders</a></div>
+    <div class="table-wrap"><table class="table"><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead><tbody>
+      {% for o in recent %}<tr><td>#{{ o.id }}</td><td>{{ o.customer.name }}</td><td>{{ o.subtotal|naira }}</td><td>{{ pay_badge(o) }}</td><td>{{ status_badge(o.status) }}</td></tr>
+      {% else %}<tr><td colspan="5">{{ empty('No orders yet', 'Orders appear here as soon as customers place them.') }}</td></tr>{% endfor %}</tbody></table></div></div>
+  <div class="card pad"><div class="row between mb"><h3>Demand forecast</h3><span class="ai-tag">{{ icon('sparkle', 14) }} AI</span></div>
+    {% if forecasts %}<ul class="col">{% for f in forecasts %}<li class="row gap-s">{{ icon('chart', 16) }}<span class="small">{{ f.text }}</span></li>{% endfor %}</ul><a class="btn btn-ghost btn-sm mt" href="{{ url_for('owner_analytics') }}">See full forecast</a>
+    {% else %}<p class="muted small">Forecasts start after a few days of sales.</p>{% endif %}</div>
+</div>
+{% endblock %}

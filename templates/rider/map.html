@@ -1,0 +1,41 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import empty with context %}
+{% block title %}Route Map{% endblock %}
+{% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}
+{% block scripts %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(() => {
+ const btn=document.getElementById('gps-toggle'), status=document.getElementById('gps-status'), select=document.getElementById('gps-order');
+ if(!btn || !status || !select) return;
+ let watchId=null, lastSent=0, sending=false;
+ const csrf=document.querySelector('meta[name="csrf-token"]')?.content || '';
+ function stop(){ if(watchId!==null) navigator.geolocation.clearWatch(watchId); watchId=null; btn.textContent='Enable live GPS'; btn.classList.remove('btn-danger'); }
+ btn.addEventListener('click',()=>{
+   if(watchId!==null){stop();status.textContent='GPS sharing paused. You can enable it again at any time.';return;}
+   if(!navigator.geolocation){status.textContent='This browser does not support GPS location.';return;}
+   if(!select.value){status.textContent='Select an active delivery first.';return;}
+   status.textContent='Requesting location permission…';
+   watchId=navigator.geolocation.watchPosition(async pos=>{
+     const now=Date.now(); if(now-lastSent<4000 || sending) return; sending=true;
+     try{const res=await fetch('{{ url_for("rider_update_location") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrf,'X-Requested-With':'fetch'},body:JSON.stringify({order_id:select.value,latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy})});const data=await res.json();if(!res.ok)throw new Error(data.message||'Location update failed');lastSent=now;status.textContent='GPS sharing is active. Accuracy: about '+Math.round(pos.coords.accuracy)+' metres. Last sent: '+new Date().toLocaleTimeString();}
+     catch(err){status.textContent=err.message;} finally{sending=false;}
+   },err=>{status.textContent=err.code===1?'Location permission was denied. Allow location access in your browser settings.':err.code===2?'GPS position is unavailable. Check your device location settings.':'GPS request timed out. Try again.';stop();},{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
+   btn.textContent='Pause live GPS'; btn.classList.add('btn-danger');
+ });
+ select.addEventListener('change',()=>{if(watchId!==null){stop();status.textContent='Delivery changed. Enable GPS again to share for the selected order.';}});
+ window.addEventListener('pagehide',stop);
+})();
+</script>{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Route map</h1><p>{{ 'Route for order #' ~ selected if selected else 'Optimised route across all your active deliveries.' }}</p></div><span class="ai-tag">{{ icon('sparkle', 14) }} AI Route Optimization</span></div>
+{% if stops %}
+<div class="card pad" style="margin-bottom:1rem"><div class="row between" style="align-items:center;gap:1rem;flex-wrap:wrap"><div><strong>Live GPS sharing</strong><p class="small muted">Share your current position with the customer for the selected delivery.</p></div><div class="row" style="gap:.5rem;flex-wrap:wrap"><select id="gps-order" aria-label="Select delivery for GPS sharing">{% for o in orders %}<option value="{{ o.id }}" {% if selected == o.id or (not selected and loop.first) %}selected{% endif %}>Order #{{ o.id }} — {{ o.customer.name }}</option>{% endfor %}</select><button type="button" class="btn btn-primary" id="gps-toggle">Enable live GPS</button></div></div><p id="gps-status" class="small muted mt" aria-live="polite">GPS sharing is off. Enable it when you are ready to start delivery.</p></div>
+<div class="grid" style="grid-template-columns:minmax(0,1.8fr) minmax(260px,1fr);align-items:start">
+  <div><div id="route-map" role="application" aria-label="Delivery route map"></div></div>
+  <div class="card pad"><div class="alert alert-info" id="route-summary" style="margin-bottom:1rem">Preparing route...</div>
+    <ol class="stop-list" id="route-stops"></ol>
+    <p class="tiny muted mt">Stops are ordered nearest-first from your location, and a drop-off only comes after its pickup. Distance and time use road routing when available.</p></div>
+</div>
+<script type="application/json" id="route-data">{{ stops|tojson }}</script>
+{% else %}<div class="card">{{ empty('No active deliveries to route', 'Accept an order and its pickup and drop-off appear here.', url_for('rider_available'), 'See available orders') }}</div>{% endif %}
+{% endblock %}

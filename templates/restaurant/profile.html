@@ -1,0 +1,35 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import csrf with context %}
+{% block title %}Restaurant Profile{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ 'Restaurant profile' if r else 'Create your restaurant' }}</h1><p>{{ 'Customers see this information and your bank details at checkout.' if r else 'Tell customers about your kitchen.' }}</p></div>
+  {% if r %}<form method="post" action="{{ url_for('owner_toggle_open') }}">{{ csrf() }}<button class="btn {{ 'btn-ghost' if r.is_open else 'btn-green' }}" type="submit">{{ 'Close for new orders' if r.is_open else 'Open for orders' }}</button></form>{% endif %}</div>
+{% if r %}<div class="row mb"><span class="badge {{ {'approved':'b-green','pending':'b-orange','rejected':'b-red'}.get(r.status, '') }}">{{ r.status|capitalize }}</span><span class="badge {{ 'b-green' if r.is_open else 'b-red' }}">{{ 'Open' if r.is_open else 'Closed' }}</span></div>{% endif %}
+<form class="card pad" method="post" action="{{ url_for('owner_profile_save') }}" enctype="multipart/form-data" style="max-width:860px">{{ csrf() }}
+  <div class="row mb"><img id="rest-preview" class="preview sq" src="{{ img_url(r.image if r else None, 'restaurant') }}" alt="">
+    <label class="field grow" style="margin:0"><span>Restaurant image (JPG or PNG)</span><input type="file" name="image" accept="image/png,image/jpeg" data-preview="rest-preview"></label></div>
+  <div class="form-grid">
+    <label class="field"><span>Restaurant name *</span><input name="name" required maxlength="100" value="{{ r.name if r else '' }}"></label>
+    <label class="field"><span>Phone *</span><input type="tel" name="phone" required maxlength="20" value="{{ r.phone if r and r.phone else current_user.phone or '' }}"></label>
+    <label class="field full"><span>Address *</span><textarea name="address" required maxlength="400">{{ r.address if r else current_user.address or '' }}</textarea></label>
+    <label class="field full"><span>Description</span><textarea name="description" maxlength="800" placeholder="What do you cook best?">{{ r.description if r and r.description else '' }}</textarea></label>
+    <label class="field"><span>Average delivery time (minutes)</span><input type="number" name="delivery_time" min="5" max="240" value="{{ r.delivery_time if r else 35 }}"></label>
+    <div class="field"><span>Map location</span><input type="hidden" name="lat" value="{{ r.lat if r and r.lat is not none else '' }}"><input type="hidden" name="lng" value="{{ r.lng if r and r.lng is not none else '' }}">
+      <button type="button" class="btn btn-ghost" data-geo>{{ icon('pin', 16) }} Use my current location</button><small data-geo-status>{{ 'Saved: ' ~ r.lat ~ ', ' ~ r.lng if r and r.lat is not none else 'Optional - helps riders find you.' }}</small></div>
+  </div>
+  <h3 class="mt mb">Bank details for online payments</h3>
+  <div class="form-grid">
+    <label class="field"><span>Account name</span><input name="account_name" maxlength="100" value="{{ r.account_name if r and r.account_name else '' }}"></label>
+    <label class="field"><span>Bank name</span><input name="bank_name" maxlength="100" value="{{ r.bank_name if r and r.bank_name else '' }}"></label>
+    <label class="field"><span>Account number</span><input name="account_number" inputmode="numeric" pattern="[0-9]{6,20}" maxlength="20" value="{{ r.account_number if r and r.account_number else '' }}"></label>
+  </div>
+  <button class="btn btn-primary" type="submit">{{ 'Save restaurant' if r else 'Create restaurant' }}</button>
+</form>
+{% if r %}
+<form class="card pad mt-2" method="post" action="{{ url_for('owner_profile_delete') }}" style="max-width:860px">{{ csrf() }}
+  <h3>Delete restaurant</h3><p class="muted small mb">This removes your restaurant, menu and staff logins. Restaurants with order history cannot be deleted; close them instead.</p>
+  <div class="row"><label class="field grow" style="margin:0"><span class="sr-only">Password</span><input type="password" name="password" placeholder="Confirm with your password" required autocomplete="current-password"></label>
+    <button class="btn btn-danger" type="submit" data-confirm="Delete {{ r.name }} and its menu permanently?">{{ icon('trash', 16) }} Delete restaurant</button></div>
+</form>
+{% endif %}
+{% endblock %}

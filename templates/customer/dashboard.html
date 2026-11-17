@@ -1,0 +1,47 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import food_card, rest_card, tracker, status_badge, empty with context %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="hero-banner">
+  <h2>Hi {{ current_user.name.split(' ')[0] }}, what are you craving?</h2>
+  <form action="{{ url_for('customer_search') }}" method="get" role="search"><input type="search" name="q" placeholder='Try "spicy chicken under 3000"' maxlength="120" aria-label="Smart search" required><button class="btn btn-primary btn-sm" type="submit">{{ icon('sparkle', 16) }} Smart search</button></form>
+  <button type="button" class="btn btn-ghost btn-sm mt" data-modal-open="meal-suggestions">{{ icon('sparkle', 16) }} Suggest a meal for me</button>
+  <div class="chips mt"><a class="chip" href="{{ url_for('customer_search', q='rice under 3000') }}">rice under 3000</a><a class="chip" href="{{ url_for('customer_search', q='grilled chicken') }}">grilled chicken</a><a class="chip" href="{{ url_for('customer_search', q='drinks below 1500') }}">drinks below 1500</a></div>
+</div>
+<div class="stats">
+  <div class="stat accent"><div class="k">Active orders</div><div class="v">{{ stats.active }}</div></div>
+  <div class="stat"><div class="k">Orders placed</div><div class="v">{{ stats.orders }}</div></div>
+  <div class="stat"><div class="k">Total spent</div><div class="v">{{ stats.spent|naira }}</div></div>
+  <div class="stat leaf"><div class="k">Favorites</div><div class="v">{{ stats.favorites }}</div></div>
+</div>
+
+{% if active %}
+<div class="section-title"><h2>Your active orders</h2><a class="small orange strong" href="{{ url_for('customer_tracking') }}">Open tracking</a></div>
+{% for o in active %}<div class="card order-card"><div class="row between"><strong>Order #{{ o.id }} from {{ o.restaurant.name }}</strong>{{ status_badge(o.status) }}</div>{{ tracker(o) }}<p class="small muted mt"><strong>Estimated delivery:</strong> {{ delivery_eta(o) }}</p></div>{% endfor %}
+{% endif %}
+
+<div class="section-title"><h2>Recommended for you</h2><span class="ai-tag">{{ icon('sparkle', 14) }} AI</span><span class="small muted">{{ rec_label }}</span></div>
+{% if recs %}<div class="auto-grid">{% for f, n in recs %}{{ food_card(f, fav_foods) }}{% endfor %}</div>
+{% else %}<div class="card">{{ empty('No recommendations yet', 'Place your first order and we will start suggesting dishes you love.', url_for('customer_restaurants'), 'Browse restaurants') }}</div>{% endif %}
+
+<div class="section-title"><h2>AI picks</h2><span class="ai-tag">{{ icon('flame', 14) }} Live</span></div>
+<div class="tabs" data-tabs="picks"><button type="button" class="tab active" data-tab="today">{{ picks.today_label }}</button><button type="button" class="tab" data-tab="trending">{{ picks.trend_label }}</button></div>
+<div class="tab-panel" data-group="picks" data-panel="today">
+  {% if picks.today %}<div class="auto-grid">{% for f, n in picks.today %}{{ food_card(f, fav_foods) }}{% endfor %}</div>{% else %}<div class="card">{{ empty('Nothing ordered yet', 'Be among the first to order today.') }}</div>{% endif %}
+</div>
+<div class="tab-panel" data-group="picks" data-panel="trending" hidden>
+  {% if picks.trending %}<div class="auto-grid">{% for f, n in picks.trending %}{{ food_card(f, fav_foods) }}{% endfor %}</div>{% else %}<div class="card">{{ empty('No trends yet', 'Trending dishes show up as orders come in.') }}</div>{% endif %}
+</div>
+
+<div class="section-title"><h2>Restaurants</h2><a class="small orange strong" href="{{ url_for('customer_restaurants') }}">View all</a></div>
+{% if restaurants %}<div class="auto-grid">{% for r in restaurants %}{{ rest_card(r, ad_ids, []) }}{% endfor %}</div>{% else %}<div class="card">{{ empty('No restaurants yet', 'Approved restaurants will appear here.') }}</div>{% endif %}
+<div class="modal" id="meal-suggestions" role="dialog" aria-modal="true" aria-labelledby="meal-suggestions-title">
+  <div class="modal-box" style="width:min(900px,100%)">
+    <div class="row between"><div><h3 id="meal-suggestions-title">Today's meal suggestions</h3><p class="small muted">SmartBite uses your order history and popular dishes to suggest what you might enjoy.</p></div><button type="button" class="btn btn-ghost btn-sm" data-modal-close aria-label="Close suggestions">Close</button></div>
+    {% if recs %}<div class="auto-grid mt">{% for f, n in recs[:4] %}{{ food_card(f, fav_foods) }}{% endfor %}</div>
+    {% elif picks.today %}<div class="auto-grid mt">{% for f, n in picks.today[:4] %}{{ food_card(f, fav_foods) }}{% endfor %}</div>
+    {% else %}<div class="empty"><h3>We are still learning your taste</h3><p>Browse restaurants and place an order. SmartBite will use popular meals to suggest dishes here.</p><a class="btn btn-primary" href="{{ url_for('customer_restaurants') }}">Browse restaurants</a></div>{% endif %}
+  </div>
+</div>
+
+{% endblock %}

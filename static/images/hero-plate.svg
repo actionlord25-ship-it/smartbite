@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="A bowl of jollof rice with chicken, plantain and salad">
+<defs><mask id="b"><rect width="600" height="600" fill="#fff"/><circle cx="520" cy="120" r="46" fill="#000"/><circle cx="470" cy="70" r="30" fill="#000"/><circle cx="556" cy="188" r="26" fill="#000"/></mask></defs>
+<circle cx="300" cy="310" r="270" fill="#FFE3CC" mask="url(#b)"/>
+<circle cx="300" cy="316" r="214" fill="#fff" mask="url(#b)"/><circle cx="300" cy="316" r="176" fill="#FFF8F0" stroke="#FFD9B8" stroke-width="5"/>
+<path d="M170 330c10-92 64-138 130-138s120 46 130 138c-26 38-72 60-130 60s-104-22-130-60z" fill="#F2692A"/>
+<path d="M200 318c12-64 52-96 100-96" stroke="#FF9A5C" stroke-width="10" stroke-linecap="round" fill="none"/>
+<g fill="#FFC9A0"><ellipse cx="238" cy="270" rx="9" ry="4" transform="rotate(-20 238 270)"/><ellipse cx="290" cy="244" rx="9" ry="4"/><ellipse cx="344" cy="268" rx="9" ry="4" transform="rotate(25 344 268)"/><ellipse cx="316" cy="304" rx="9" ry="4"/><ellipse cx="262" cy="312" rx="9" ry="4" transform="rotate(-15 262 312)"/><ellipse cx="380" cy="320" rx="9" ry="4"/><ellipse cx="214" cy="332" rx="9" ry="4"/><ellipse cx="300" cy="352" rx="9" ry="4"/></g>
+<path d="M330 396c30-20 62-44 78-72 16 6 26 22 20 44-12 40-62 56-98 28z" fill="#B5651D"/><path d="M336 388c24-16 50-36 66-60" stroke="#D88A3D" stroke-width="8" stroke-linecap="round" fill="none"/>
+<circle cx="418" cy="344" r="12" fill="#F5E6D3" stroke="#B5651D" stroke-width="4"/>
+<g fill="#F4C430" stroke="#D99A00" stroke-width="3"><ellipse cx="206" cy="396" rx="30" ry="18" transform="rotate(-20 206 396)"/><ellipse cx="252" cy="418" rx="30" ry="18" transform="rotate(-8 252 418)"/></g>
+<path d="M170 262c-30-10-42-40-30-62 28 0 52 22 54 52z" fill="#4CAF7D"/><path d="M160 244c-6-12-8-24-8-36" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none"/>
+<circle cx="188" cy="214" r="22" fill="#E5533C"/><circle cx="188" cy="214" r="12" fill="#F58F7C"/>
+<g transform="translate(494 396) rotate(18)"><rect x="-6" y="-20" width="12" height="190" rx="6" fill="#CFCFCF"/><path d="M-26 -90h52v40c0 18-12 30-26 30s-26-12-26-30z" fill="#DCDCDC"/><g stroke="#fff" stroke-width="3"><path d="M-12 -86v30M0 -86v30M12 -86v30"/></g></g>
+</svg>

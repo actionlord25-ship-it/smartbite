@@ -1,0 +1,33 @@
+{% extends 'layouts/dash.html' %}
+{% from 'partials/macros.html' import chart with context %}
+{% block title %}Dashboard Analytics{% endblock %}
+{% block scripts %}{% include 'partials/chartjs.html' %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Dashboard analytics</h1><p>Platform health at a glance.</p></div></div>
+<div class="stats">
+  <div class="stat"><div class="k">Total users</div><div class="v">{{ counts.users }}</div></div>
+  <div class="stat"><div class="k">Restaurants</div><div class="v">{{ counts.restaurants }}</div></div>
+  <div class="stat"><div class="k">Riders</div><div class="v">{{ counts.riders }}</div></div>
+  <div class="stat"><div class="k">Orders</div><div class="v">{{ counts.orders }}</div></div>
+  <div class="stat accent"><div class="k">Platform revenue</div><div class="v">{{ revenue.total|naira }}</div></div>
+</div>
+{% if counts.pending_restaurants or counts.pending_proofs or counts.open_flags or counts.pending_ads %}
+<div class="card pad mb"><h3 class="mb">Needs your attention</h3><div class="row">
+  {% if counts.pending_restaurants %}<a class="badge b-orange" href="{{ url_for('admin_restaurants', status='pending') }}">{{ counts.pending_restaurants }} restaurant(s) to approve</a>{% endif %}
+  {% if counts.pending_proofs %}<a class="badge b-orange" href="{{ url_for('admin_proofs') }}">{{ counts.pending_proofs }} payment proof(s)</a>{% endif %}
+  {% if counts.pending_ads %}<a class="badge b-orange" href="{{ url_for('admin_ads') }}">{{ counts.pending_ads }} ad request(s)</a>{% endif %}
+  {% if counts.open_flags %}<a class="badge b-red" href="{{ url_for('admin_fraud') }}">{{ counts.open_flags }} fraud alert(s)</a>{% endif %}</div></div>
+{% endif %}
+<div class="stats">
+  <div class="stat leaf"><div class="k">Commission earned</div><div class="v">{{ revenue.commission|naira }}</div></div>
+  <div class="stat leaf"><div class="k">Service charges</div><div class="v">{{ revenue.service|naira }}</div></div>
+  <div class="stat leaf"><div class="k">Sponsored ads income</div><div class="v">{{ revenue.ads|naira }}</div></div>
+  <div class="stat"><div class="k">Delivered order value</div><div class="v">{{ revenue.gmv|naira }}</div></div>
+</div>
+<div class="grid g2">
+  <div class="card pad" style="grid-column:1/-1"><h3 class="mb">Revenue streams - last 30 days</h3>{{ chart('revenue', revenue_chart) }}</div>
+  <div class="card pad"><h3 class="mb">Orders per day</h3>{{ chart('orders', orders_chart) }}</div>
+  <div class="card pad"><h3 class="mb">Users by role</h3>{{ chart('users', users_chart) }}</div>
+  <div class="card pad" style="grid-column:1/-1"><h3 class="mb">Orders by status</h3>{{ chart('status', status_chart, true) }}</div>
+</div>
+{% endblock %}
